@@ -43,4 +43,12 @@ return [
         'api_version' => env('GHL_API_VERSION', '2021-07-28'),
     ],
 
+    'paymongo' => [
+        'is_production' => env('PAYMONGO_IS_PRODUCTION', false),
+        'test_secret_key' => env('PAYMONGO_TEST_SECRET_KEY'),
+        'test_publishable_key' => env('PAYMONGO_TEST_PUBLISHABLE_KEY'),
+        'live_secret_key' => env('PAYMONGO_LIVE_SECRET_KEY'),
+        'live_publishable_key' => env('PAYMONGO_LIVE_PUBLISHABLE_KEY'),
+    ],
+
 ];

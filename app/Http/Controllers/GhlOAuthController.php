@@ -17,9 +17,16 @@ class GhlOAuthController extends Controller
     public function callback(Request $request)
     {
         $code = $request->query('code');
+        $state = $request->query('state');
 
         if (!$code) {
             return response()->json(['error' => 'No authorization code provided in the callback URL.'], 400);
+        }
+
+        // Validate state parameter to prevent CSRF attacks
+        $savedState = $request->session()->pull('oauth_state');
+        if (!$savedState || $state !== $savedState) {
+            return response()->json(['error' => 'Invalid state parameter. Authentication failed.'], 403);
         }
 
         // 1. Exchange Code & Save Token

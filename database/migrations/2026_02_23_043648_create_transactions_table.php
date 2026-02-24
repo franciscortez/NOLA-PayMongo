@@ -28,6 +28,7 @@ return new class extends Migration {
             $table->string('currency', 3)->default('PHP');
             $table->string('description')->nullable();
             $table->string('status')->default('pending');       // pending, paid, failed, refunded, expired
+            $table->boolean('is_live_mode')->default(false);
             $table->string('payment_method')->nullable();       // card, qrph, gcash, grab_pay, paymaya
 
             // Customer

@@ -16,4 +16,4 @@ Before performing any work on this codebase, read these context files:
     - **PayMongo API**: https://developers.paymongo.com/docs/introduction
     - **GoHighLevel API**: https://marketplace.gohighlevel.com/docs/
     - **GHL Custom Provider**: https://marketplace.gohighlevel.com/docs/ghl/payments/custom-provider
-    - **How to build a custom payments integration on the platform** https://help.gohighlevel.com/support/solutions/articles/155000002620-how-to-build-a-custom-payments-integration-on-the-platform
+    - **How to build a custom payments integration on the platform (flow)** https://help.gohighlevel.com/support/solutions/articles/155000002620-how-to-build-a-custom-payments-integration-on-the-platform

@@ -97,6 +97,11 @@ class CheckoutController extends Controller
          $payload['billing'] = $billing;
       }
 
+      // Determine if this is a live or test transaction based on GHL's publishable key
+      $publishableKey = $request->input('publishable_key', '');
+      $isLiveMode = str_starts_with($publishableKey, 'pk_live_') || $request->input('is_live_mode', false);
+      $this->payMongoService = $this->payMongoService->setProduction($isLiveMode);
+
       $result = $this->payMongoService->createCheckoutSession($payload);
 
       if (!$result['success']) {
@@ -118,6 +123,7 @@ class CheckoutController extends Controller
          'status' => 'pending',
          'customer_name' => $name,
          'customer_email' => $email,
+         'is_live_mode' => $isLiveMode,
       ]);
 
       Log::info('CheckoutController: Transaction saved', [

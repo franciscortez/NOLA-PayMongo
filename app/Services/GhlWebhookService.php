@@ -35,13 +35,12 @@ class GhlWebhookService
          'ghlTransactionId' => $transaction->ghl_transaction_id,
          'chargeSnapshot' => [
             'status' => 'succeeded',
-            'amount' => $transaction->amount / 100, // convert cents to major units (pesos)
+            'amount' => $transaction->amount * 100, // minor units
             'chargeId' => $chargeId,
             'chargedAt' => ($transaction->paid_at ?? now())->timestamp,
          ],
          'locationId' => $transaction->ghl_location_id,
-         'apiKey' => $this->resolveApiKey(),
-         'marketplaceAppId' => config('services.ghl.marketplace_app_id'),
+         'apiKey' => $this->resolveApiKey($transaction),
       ];
 
       Log::info('GhlWebhookService: Sending payment.captured to GHL', [
@@ -83,9 +82,9 @@ class GhlWebhookService
     * Resolve which PayMongo API key to send as the apiKey field.
     * GHL uses this to match the provider config (test vs live).
     */
-   protected function resolveApiKey(): string
+   protected function resolveApiKey(Transaction $transaction): string
    {
-      $isProduction = (bool) config('services.paymongo.is_production', false);
+      $isProduction = $transaction->is_live_mode;
 
       return $isProduction
          ? config('services.paymongo.live_secret_key')

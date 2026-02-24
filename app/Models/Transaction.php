@@ -22,12 +22,14 @@ class Transaction extends Model
       'customer_email',
       'metadata',
       'paid_at',
+      'is_live_mode',
    ];
 
    protected $casts = [
       'metadata' => 'array',
       'paid_at' => 'datetime',
       'amount' => 'integer',
+      'is_live_mode' => 'boolean',
    ];
 
    // ===== Scopes =====

@@ -55,7 +55,7 @@
 </head>
 
 <body>
-   <div class="container" data-transaction-id="{{ $transactionId ?? '' }}" data-order-id="{{ $orderId ?? '' }}">
+   <div class="container">
       <div class="icon">
          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd"
@@ -64,22 +64,17 @@
          </svg>
       </div>
       <h2>Payment Successful!</h2>
-      <p>Your payment has been received. You may close this window.</p>
+      <p>Your payment has been received. This window will close automatically.</p>
    </div>
 
    <script>
-      // Notify GHL parent that payment succeeded
-      var container = document.querySelector('.container');
-      var transactionId = container.getAttribute('data-transaction-id');
-      var orderId = container.getAttribute('data-order-id');
-      var chargeId = transactionId || orderId || 'checkout_success_' + Date.now();
-
-      console.log('[Checkout] Payment success — notifying GHL parent, chargeId:', chargeId);
-
-      window.parent.postMessage({
-         type: 'custom_element_success_response',
-         chargeId: chargeId
-      }, '*');
+      // This page is now loaded inside the popup window (not the GHL iFrame).
+      // The iFrame JS handles notifying GHL via polling.
+      // Just attempt to close the popup after a brief delay.
+      console.log('[Checkout Success] Payment complete — closing popup in 2s');
+      setTimeout(function () {
+         window.close();
+      }, 2000);
    </script>
 </body>
 

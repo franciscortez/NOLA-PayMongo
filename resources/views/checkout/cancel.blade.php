@@ -64,17 +64,17 @@
          </svg>
       </div>
       <h2>Payment Cancelled</h2>
-      <p>You cancelled the payment. You may close this window and try again.</p>
+      <p>You cancelled the payment. This window will close automatically.</p>
    </div>
 
    <script>
-      // Notify GHL parent that payment was cancelled
-      console.log('[Checkout] Payment cancelled — notifying GHL parent');
-
-      window.parent.postMessage({
-         type: 'custom_element_error_response',
-         error: { description: 'Payment was cancelled by user' }
-      }, '*');
+      // This page is now loaded inside the popup window (not the GHL iFrame).
+      // The iFrame JS will detect the popup closed and handle the status check.
+      // Just close the popup after a brief delay.
+      console.log('[Checkout Cancel] Payment cancelled — closing popup in 2s');
+      setTimeout(function () {
+         window.close();
+      }, 2000);
    </script>
 </body>
 

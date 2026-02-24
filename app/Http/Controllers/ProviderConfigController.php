@@ -98,4 +98,50 @@ class ProviderConfigController extends Controller
 
         return back()->with('success', 'Provider successfully removed from GoHighLevel!');
     }
+
+    /**
+     * Diagnostic endpoint: shows current GHL provider registration status.
+     */
+    public function diagnose(Request $request)
+    {
+        $locationId = $request->query('location_id') ?? $request->query('locationId');
+
+        if (!$locationId) {
+            return response()->json(['error' => 'location_id query param required'], 400);
+        }
+
+        $locationToken = LocationToken::where('location_id', $locationId)->first();
+
+        if (!$locationToken) {
+            return response()->json([
+                'error' => 'No token found for this location',
+                'location_id' => $locationId,
+                'hint' => 'You need to re-authenticate via OAuth at /oauth/callback',
+            ], 404);
+        }
+
+        // Check if token might be expired
+        $tokenInfo = [
+            'location_id' => $locationToken->location_id,
+            'has_access_token' => !empty($locationToken->access_token),
+            'has_refresh_token' => !empty($locationToken->refresh_token),
+            'expires_at' => $locationToken->expires_at ?? 'not set',
+            'is_expired' => $locationToken->expires_at ? now()->gt($locationToken->expires_at) : 'unknown',
+        ];
+
+        // Fetch current config from GHL
+        $ghlConfig = $this->providerConfigService->fetchProviderConfig(
+            $locationId,
+            $locationToken->access_token
+        );
+
+        return response()->json([
+            'token_info' => $tokenInfo,
+            'ghl_provider' => $ghlConfig['provider'],
+            'ghl_connect_config' => $ghlConfig['connectConfig'],
+            'app_url' => config('app.url'),
+            'expected_payments_url' => rtrim(config('app.url'), '/') . '/checkout',
+            'expected_query_url' => rtrim(config('app.url'), '/') . '/api/webhook/ghl-query',
+        ], 200);
+    }
 }

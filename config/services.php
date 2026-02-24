@@ -41,6 +41,7 @@ return [
         'redirect_uri' => env('GHL_REDIRECT_URI'),
         'api_base' => env('GHL_API_BASE', 'https://services.leadconnectorhq.com'),
         'api_version' => env('GHL_API_VERSION', '2021-07-28'),
+        'marketplace_app_id' => env('GHL_MARKETPLACE_APP_ID'),
     ],
 
     'paymongo' => [

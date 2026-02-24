@@ -17,7 +17,7 @@ class ProviderConfigService
          'description' => 'PayMongo integration for NOLA. Powered by the GoHighLevel Custom Payment Provider.',
          'imageUrl' => 'https://i.imgur.com/upHBjxs.png',
          'locationId' => $locationId,
-         'queryUrl' => rtrim(config('app.url'), '/') . '/api/webhook/ghl-query',
+         'queryUrl' => rtrim(config('app.url'), '/') . '/api/query',
          'paymentsUrl' => rtrim(config('app.url'), '/') . '/checkout'
       ];
 
@@ -71,6 +71,35 @@ class ProviderConfigService
 
       Log::info('HighLevel Connect Config Success', $response->json());
       return ['success' => true];
+   }
+
+   /**
+    * Fetches the current provider config from GHL for diagnostics.
+    */
+   public function fetchProviderConfig(string $locationId, string $accessToken)
+   {
+      // 1. Fetch the integration (provider registration)
+      $providerResponse = Http::withHeaders([
+         'Authorization' => 'Bearer ' . $accessToken,
+         'Version' => config('services.ghl.api_version', '2021-07-28')
+      ])->get(config('services.ghl.api_base') . '/payments/custom-provider/provider?locationId=' . $locationId);
+
+      // 2. Fetch the connect config (API keys)
+      $connectResponse = Http::withHeaders([
+         'Authorization' => 'Bearer ' . $accessToken,
+         'Version' => config('services.ghl.api_version', '2021-07-28')
+      ])->get(config('services.ghl.api_base') . '/payments/custom-provider/connect?locationId=' . $locationId);
+
+      return [
+         'provider' => [
+            'status' => $providerResponse->status(),
+            'data' => $providerResponse->json(),
+         ],
+         'connectConfig' => [
+            'status' => $connectResponse->status(),
+            'data' => $connectResponse->json(),
+         ],
+      ];
    }
 
    /**

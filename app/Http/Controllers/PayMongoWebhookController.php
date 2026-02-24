@@ -5,15 +5,18 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Transaction;
 use App\Services\PayMongoService;
+use App\Services\GhlWebhookService;
 use Illuminate\Support\Facades\Log;
 
 class PayMongoWebhookController extends Controller
 {
    protected PayMongoService $payMongoService;
+   protected GhlWebhookService $ghlWebhookService;
 
-   public function __construct(PayMongoService $payMongoService)
+   public function __construct(PayMongoService $payMongoService, GhlWebhookService $ghlWebhookService)
    {
       $this->payMongoService = $payMongoService;
+      $this->ghlWebhookService = $ghlWebhookService;
    }
 
    /**
@@ -90,6 +93,9 @@ class PayMongoWebhookController extends Controller
             'payment_method' => $paymentSource['type'] ?? null,
             'payment_id' => $payment['id'] ?? null,
          ]);
+
+         // Notify GHL that the payment was captured
+         $this->ghlWebhookService->sendPaymentCaptured($transaction->fresh());
       }
 
       return response()->json(['message' => 'OK'], 200);
@@ -124,6 +130,9 @@ class PayMongoWebhookController extends Controller
          Log::info('PayMongo Webhook: Transaction updated via payment.paid', [
             'transaction_id' => $transaction->id,
          ]);
+
+         // Notify GHL that the payment was captured
+         $this->ghlWebhookService->sendPaymentCaptured($transaction->fresh());
       }
 
       return response()->json(['message' => 'OK'], 200);

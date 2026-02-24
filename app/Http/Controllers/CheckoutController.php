@@ -40,15 +40,16 @@ class CheckoutController extends Controller
 
       $amount = $request->input('amount');
       $currency = strtoupper($request->input('currency'));
-      $description = $request->input('description', 'Payment');
-      $name = $request->input('name', 'Customer');
-      $email = $request->input('email', 'customer@example.com');
+      $description = $request->input('description');
+      $name = $request->input('name');
+      $email = $request->input('email');
       $phone = $request->input('phone');
 
-      // Build success/cancel URLs with params GHL needs
       $transactionId = $request->input('transaction_id', '');
       $orderId = $request->input('order_id', '');
 
+      // Build success/cancel URLs (no checkout_session_id here — the iFrame JS
+      // handles result communication via polling after the popup closes)
       $successUrl = url('/checkout/success') . '?' . http_build_query([
          'transaction_id' => $transactionId,
          'order_id' => $orderId,
@@ -59,7 +60,7 @@ class CheckoutController extends Controller
          'order_id' => $orderId,
       ]);
 
-      // Determine available payment methods (QR PH always enabled, card if available)
+      // Payment methods available in the Philippines
       $paymentMethodTypes = ['qrph', 'card', 'gcash', 'grab_pay', 'paymaya'];
 
       // Build the checkout session payload
@@ -130,8 +131,62 @@ class CheckoutController extends Controller
    }
 
    /**
+    * Check payment status for a checkout session (used by iFrame JS polling).
+    * GET /checkout/status/{sessionId}
+    */
+   public function checkStatus(string $sessionId)
+   {
+      // Check local DB first
+      $transaction = Transaction::where('checkout_session_id', $sessionId)->first();
+
+      if ($transaction && $transaction->isPaid()) {
+         return response()->json([
+            'status' => 'paid',
+            'charge_id' => $transaction->payment_id
+               ?? $transaction->payment_intent_id
+               ?? $transaction->checkout_session_id,
+         ]);
+      }
+
+      // Fallback: retrieve from PayMongo API
+      $result = $this->payMongoService->retrieveCheckoutSession($sessionId);
+
+      if (!$result['success']) {
+         return response()->json(['status' => 'unknown']);
+      }
+
+      $pmStatus = $result['status'] ?? 'active';
+
+      // PayMongo checkout session statuses: active, expired, paid
+      if ($pmStatus === 'paid') {
+         // Update DB if webhook hasn't arrived yet
+         if ($transaction) {
+            $paymentIntent = $result['payment_intent'] ?? null;
+            $payments = $result['payments'] ?? [];
+            $payment = $payments[0] ?? null;
+
+            $transaction->update([
+               'status' => 'paid',
+               'payment_intent_id' => $paymentIntent['id'] ?? $transaction->payment_intent_id,
+               'payment_id' => $payment['id'] ?? $transaction->payment_id,
+               'paid_at' => now(),
+            ]);
+         }
+
+         return response()->json([
+            'status' => 'paid',
+            'charge_id' => $transaction->payment_id
+               ?? $transaction->payment_intent_id
+               ?? $sessionId,
+         ]);
+      }
+
+      return response()->json(['status' => $pmStatus]);
+   }
+
+   /**
     * Success callback — PayMongo redirects here after successful payment.
-    * This page notifies the GHL parent window.
+    * In the popup flow this page is loaded inside the popup, not the GHL iFrame.
     */
    public function success(Request $request)
    {

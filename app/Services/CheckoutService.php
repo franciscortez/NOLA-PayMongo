@@ -41,6 +41,29 @@ class CheckoutService
 
       $paymentMethodTypes = ['qrph', 'card', 'gcash', 'grab_pay', 'paymaya'];
 
+      // Build line items from GHL product details or fallback to description
+      $lineItems = [];
+      $productDetails = $data['product_details'] ?? [];
+
+      if (!empty($productDetails) && is_array($productDetails)) {
+         foreach ($productDetails as $item) {
+            $lineItems[] = [
+               'name' => isset($item['name']) ? substr($item['name'], 0, 255) : 'Product',
+               'quantity' => isset($item['qty']) ? (int) $item['qty'] : 1,
+               'amount' => isset($item['price']) ? (int) round((float) $item['price'] * 100) : $amount,
+               'currency' => $currency,
+            ];
+         }
+      } else {
+         // Fallback to single line item based on total amount and description
+         $lineItems[] = [
+            'name' => $description ?: 'Payment',
+            'quantity' => 1,
+            'amount' => $amount,
+            'currency' => $currency,
+         ];
+      }
+
       $payload = [
          'send_email_receipt' => true,
          'show_description' => true,
@@ -49,14 +72,7 @@ class CheckoutService
          'payment_method_types' => $paymentMethodTypes,
          'success_url' => $successUrl,
          'cancel_url' => $cancelUrl,
-         'line_items' => [
-            [
-               'name' => $description,
-               'quantity' => 1,
-               'amount' => $amount,
-               'currency' => $currency,
-            ],
-         ],
+         'line_items' => $lineItems,
          'metadata' => array_filter([
             'ghl_transaction_id' => $transactionId,
             'ghl_order_id' => $orderId,

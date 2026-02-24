@@ -35,6 +35,10 @@ class CheckoutController extends Controller
          'name' => 'nullable|string|max:255',
          'email' => 'nullable|email|max:255',
          'phone' => 'nullable|string|max:20',
+         'product_details' => 'nullable|array',
+         'product_details.*.name' => 'required_with:product_details|string',
+         'product_details.*.price' => 'required_with:product_details|numeric',
+         'product_details.*.qty' => 'required_with:product_details|integer|min:1',
       ]);
 
       $publishableKey = $request->input('publishable_key', '');

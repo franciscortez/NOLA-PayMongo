@@ -188,9 +188,14 @@
             const currency = (data.currency || 'PHP').toUpperCase();
             const amountInCents = Math.round(amount * 100);
 
-            let description = 'Payment';
-            if (data.productDetails && data.productDetails.length > 0) {
-               description = data.productDetails.map(p => p.name).join(', ');
+            let description = data.description || 'Payment';
+            let validProductDetails = [];
+
+            if (data.productDetails && Array.isArray(data.productDetails)) {
+               validProductDetails = data.productDetails.filter(p => p && (p.name || typeof p.price !== 'undefined') && Object.keys(p).length > 0);
+               if (validProductDetails.length > 0) {
+                  description = validProductDetails.map(p => p.name || 'Product').join(', ');
+               }
             }
 
             const name = (data.contact && data.contact.name) || 'Customer';
@@ -214,7 +219,8 @@
                   transaction_id: data.transactionId || '',
                   order_id: data.orderId || '',
                   location_id: data.locationId || '',
-                  publishable_key: data.publishableKey || ''
+                  publishable_key: data.publishableKey || '',
+                  product_details: validProductDetails
                })
             });
 

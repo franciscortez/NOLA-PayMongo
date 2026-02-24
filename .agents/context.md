@@ -52,10 +52,13 @@ app/
 │   ├── LocationToken.php               — GHL OAuth tokens per location
 │   └── Transaction.php                 — Payment transaction records
 ├── Services/
+│   ├── CheckoutService.php             — Checkout creation and status logic
+│   ├── GhlQueryService.php             — GHL queryUrl verify and refund logic
 │   ├── GhlService.php                  — OAuth token exchange & refresh
 │   ├── GhlWebhookService.php           — Sends payment.captured events to GHL
 │   ├── PayMongoService.php             — PayMongo API wrapper (checkout, verify, refund)
-│   └── ProviderConfigService.php       — GHL custom provider registration API
+│   ├── ProviderConfigService.php       — GHL custom provider registration API
+│   └── WebhookProcessingService.php    — PayMongo webhook event processing
 routes/
 ├── web.php                             — OAuth, provider config, checkout routes
 └── api.php                             — GHL query webhook, PayMongo webhook
@@ -198,10 +201,12 @@ PAYMONGO_LIVE_PUBLISHABLE_KEY=pk_live_xxx
 - **Payment Methods**: card, gcash, grab_pay, paymaya, qrph
 - **Currency**: PHP (amounts in centavos)
 - **Webhooks**: `checkout_session.payment.paid`, `payment.paid`, `payment.failed`, `payment.refunded`
+- **Testing**: https://developers.paymongo.com/docs/testing (Provides test card numbers for basic, 3DS, and error scenarios like `card_expired`, `cvc_invalid`, `insufficient_funds`, etc.)
 
 ### GoHighLevel API (v2021-07-28)
 
 - **Docs**: https://marketplace.gohighlevel.com/docs/
+- **Integration Flow Guide**: https://help.gohighlevel.com/support/solutions/articles/155000002620-how-to-build-a-custom-payments-integration-on-the-platform
 - **Base URL**: `https://services.leadconnectorhq.com`
 - **Auth**: Bearer token (OAuth2 — Location-level)
 - **Custom Provider Endpoints**:

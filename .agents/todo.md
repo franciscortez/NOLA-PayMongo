@@ -8,6 +8,16 @@
 
 ---
 
+## 🎯 Next Priorities
+
+Based on the completed foundation and refactoring, here are the most critical next steps to ensure the integration is robust and production-ready:
+
+1. **Token Auto-Refresh Middleware (Priority 1)**: Currently, `GhlService::refreshToken()` exists but isn't used automatically. If the token expires, API calls fail. We need a middleware to check and refresh the token before hitting GHL endpoints.
+2. **PayMongo Webhook Security (Priority 2)**: We need to validate the `X-Paymongo-Signature` in the `PayMongoWebhookController` to prevent spoofed requests from updating transaction statuses.
+3. **Support Multiple Line Items (Priority 3)**: The `CheckoutService` currently just creates 1 line item from the total amount. To fully match GHL's order data, we need to map their `productDetails` into PayMongo's `line_items` array.
+
+---
+
 ## 1. 🔐 OAuth & Authentication
 
 > GHL OAuth flow for connecting sub-accounts to this app.

@@ -35,7 +35,7 @@ class GhlWebhookService
          'ghlTransactionId' => $transaction->ghl_transaction_id,
          'chargeSnapshot' => [
             'status' => 'succeeded',
-            'amount' => $transaction->amount * 100, // minor units
+            'amount' => $transaction->amount, // minor units
             'chargeId' => $chargeId,
             'chargedAt' => ($transaction->paid_at ?? now())->timestamp,
          ],

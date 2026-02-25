@@ -16,6 +16,9 @@
    <!-- Tailwind CSS -->
    <script src="https://cdn.tailwindcss.com"></script>
 
+   <!-- SweetAlert2 -->
+   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
    <script>
       tailwind.config = {
          theme: {
@@ -136,14 +139,13 @@
 
       {{-- Remove Provider Form --}}
       @if($isConnected)
-         <form action="{{ route('provider.delete') }}" method="POST"
-            onsubmit="return confirm('Are you sure you want to completely remove NOLA PayMongo from this GoHighLevel location?');">
+         <form id="removeIntegrationForm" action="{{ route('provider.delete') }}" method="POST">
             @csrf
             @method('DELETE')
             <input type="hidden" name="location_id" value="{{ $locationId }}">
-            <button type="submit"
-               class="w-full bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 font-medium py-3.5 px-6 rounded-xl transition-all duration-200 border border-slate-200 hover:border-rose-200 flex justify-center items-center gap-2 active:bg-rose-100">
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+            <button type="button" onclick="confirmRemoval()"
+               class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3.5 px-6 rounded-xl transition-all duration-200 shadow-md shadow-red-600/20 flex justify-center items-center gap-2 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"
                   stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round"
                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -162,6 +164,31 @@
       </div>
    </div>
 
+   <script>
+      function confirmRemoval() {
+         Swal.fire({
+            title: 'Are you sure?',
+            text: "This will completely remove the NOLA PayMongo integration from this GoHighLevel location.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626', // bg-red-600
+            cancelButtonColor: '#475569', // bg-slate-600
+            confirmButtonText: 'Yes, remove it!',
+            cancelButtonText: 'No, keep it',
+            background: '#ffffff',
+            borderRadius: '1.25rem',
+            customClass: {
+               popup: 'rounded-[2rem] shadow-2xl',
+               confirmButton: 'rounded-xl font-medium px-6 py-3',
+               cancelButton: 'rounded-xl font-medium px-6 py-3'
+            }
+         }).then((result) => {
+            if (result.isConfirmed) {
+               document.getElementById('removeIntegrationForm').submit();
+            }
+         })
+      }
+   </script>
 </body>
 
 </html>

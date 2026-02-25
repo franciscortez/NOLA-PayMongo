@@ -112,7 +112,9 @@ class ProviderConfigService
          'Version' => config('services.ghl.api_version', '2021-07-28')
       ])->get(config('services.ghl.api_base') . '/payments/custom-provider/connect?locationId=' . $locationId);
 
-      return $response->status() === 200;
+      $data = $response->json();
+
+      return $response->successful() && isset($data['_id']);
    }
 
    /**

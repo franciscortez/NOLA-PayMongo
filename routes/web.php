@@ -13,7 +13,7 @@ Route::get('/', function (Request $request) {
     $state = Str::random(40);
     $request->session()->put('oauth_state', $state);
 
-    $clientId = config('services.ghl.client_id', '69966b6d3cec9471395896f1-mlsu1fvh');
+    $clientId = config('services.ghl.client_id');
 
     // The version_id is the first part of the client_id before the hyphen
     $versionIdArr = explode('-', $clientId);

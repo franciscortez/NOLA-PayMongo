@@ -78,23 +78,13 @@ class ProviderConfigService
     */
    public function fetchProviderConfig(string $locationId, string $accessToken)
    {
-      // 1. Fetch the integration (provider registration)
-      $providerResponse = Http::withHeaders([
-         'Authorization' => 'Bearer ' . $accessToken,
-         'Version' => config('services.ghl.api_version', '2021-07-28')
-      ])->get(config('services.ghl.api_base') . '/payments/custom-provider/provider?locationId=' . $locationId);
-
-      // 2. Fetch the connect config (API keys)
+      // Fetch the connect config (API keys & App Data)
       $connectResponse = Http::withHeaders([
          'Authorization' => 'Bearer ' . $accessToken,
          'Version' => config('services.ghl.api_version', '2021-07-28')
       ])->get(config('services.ghl.api_base') . '/payments/custom-provider/connect?locationId=' . $locationId);
 
       return [
-         'provider' => [
-            'status' => $providerResponse->status(),
-            'data' => $providerResponse->json(),
-         ],
          'connectConfig' => [
             'status' => $connectResponse->status(),
             'data' => $connectResponse->json(),

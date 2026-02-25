@@ -94,7 +94,11 @@
 
       // 2. Listen for GHL messages containing init data
       window.addEventListener('message', function (event) {
+         // Because this app will be used across many different GHL accounts and custom funnel domains,
+         // we cannot strictly wildcard match every valid origin.
+         // We will accept the initialization payload and let the backend validate the location_id and API keys.
          let data = event.data;
+
          try {
             if (typeof data === 'string') data = JSON.parse(data);
          } catch (e) { }
@@ -121,6 +125,25 @@
          if (data.amount !== undefined && data.currency !== undefined && !paymentData) {
             paymentData = data;
             createCheckoutSession(data);
+         }
+
+         // 2.a Listen for messages from the checkout iFrame (success/cancel)
+         if (data.type === 'checkout_success') {
+            const chargeId = currentCheckoutSessionId;
+            // Shorter delay since the user is already looking at the success page
+            setTimeout(() => {
+               notifyGhlSuccess(chargeId);
+            }, 3000);
+         }
+
+         if (data.type === 'checkout_cancelled') {
+            // Give the user a moment to see the cancellation page
+            setTimeout(() => {
+               document.getElementById('iframeContainer').classList.add('hidden');
+               document.getElementById('checkoutIframe').src = '';
+               showError('Payment was cancelled.');
+               notifyGhlError('Payment not completed.');
+            }, 3000);
          }
       });
 

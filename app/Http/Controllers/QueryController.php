@@ -24,6 +24,9 @@ class QueryController extends Controller
     */
    public function handle(Request $request)
    {
+      $payload = $request->all();
+      Log::info('QueryController: received payload', ['payload' => $payload]);
+
       $type = $request->input('type');
       $apiKey = $request->input('apiKey');
 

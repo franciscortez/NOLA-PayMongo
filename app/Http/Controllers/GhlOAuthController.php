@@ -20,26 +20,31 @@ class GhlOAuthController extends Controller
         $state = $request->query('state');
 
         if (!$code) {
-            return response()->json(['error' => 'No authorization code provided in the callback URL.'], 400);
+            return view('oauth.error', [
+                'error' => 'No authorization code provided in the callback URL.',
+            ]);
         }
 
         // Validate state parameter to prevent CSRF attacks
         $savedState = $request->session()->pull('oauth_state');
         if (!$savedState || $state !== $savedState) {
-            return response()->json(['error' => 'Invalid state parameter. Authentication failed.'], 403);
+            return view('oauth.error', [
+                'error' => 'Invalid state parameter. Authentication failed.',
+            ]);
         }
 
         // 1. Exchange Code & Save Token
         $tokenResult = $this->ghlService->exchangeCodeForToken($code);
 
         if (!$tokenResult['success']) {
-            return response()->json([
+            return view('oauth.error', [
                 'error' => $tokenResult['error'],
                 'details' => $tokenResult['details'] ?? null,
-            ], 500);
+            ]);
         }
 
         $locationToken = $tokenResult['location_token'];
         return redirect()->away(url('/provider/config?location_id=' . $locationToken->location_id));
+
     }
 }

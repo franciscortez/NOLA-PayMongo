@@ -76,7 +76,12 @@
 
    <script>
       // The iFrame JS handles notifying GHL via polling.
-      // Attempt to close the popup after a brief delay.
+      // Notify parent that we reached the success page.
+      if (window.parent && window.parent !== window) {
+         window.parent.postMessage({ type: 'checkout_success' }, '*');
+      }
+
+      // Attempt to close the popup after a brief delay (legacy/fallback).
       setTimeout(function () {
          window.close();
       }, 3500);

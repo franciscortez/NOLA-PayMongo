@@ -106,17 +106,27 @@
 
       {{-- Error Alert --}}
       @if(session('error'))
-         <div
-            class="bg-rose-50 text-rose-700 p-4 rounded-xl mb-6 text-sm font-medium border border-rose-100 flex items-start gap-3 text-left">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-rose-500 shrink-0 mt-0.5" viewBox="0 0 20 20"
-               fill="currentColor">
-               <path fill-rule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clip-rule="evenodd" />
-            </svg>
-            <span>{{ session('error') }}</span>
+         <div class="bg-rose-50 text-rose-700 p-4 rounded-xl mb-6 text-sm font-medium border border-rose-100 text-left">
+            <div class="flex items-start gap-3">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-rose-500 shrink-0 mt-0.5" viewBox="0 0 20 20"
+                  fill="currentColor">
+                  <path fill-rule="evenodd"
+                     d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                     clip-rule="evenodd" />
+               </svg>
+               <span>{{ session('error') }}</span>
+            </div>
+
+            @if(session('error_details'))
+               <div class="mt-3 pt-3 border-t border-rose-200">
+                  <p class="text-[10px] uppercase tracking-wider font-bold text-rose-400 mb-1">Technical Details</p>
+                  <pre
+                     class="bg-rose-100/50 p-2 rounded-lg overflow-x-auto text-[11px] font-mono text-rose-800">{{ is_array(session('error_details')) ? json_encode(session('error_details'), JSON_PRETTY_PRINT) : session('error_details') }}</pre>
+               </div>
+            @endif
          </div>
       @endif
+
 
       {{-- Connect Provider Form --}}
       @if(!$isConnected)

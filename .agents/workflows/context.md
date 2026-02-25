@@ -20,3 +20,4 @@ Before performing any work on this codebase, read these context files:
     - **GoHighLevel API**: https://marketplace.gohighlevel.com/docs/
     - **GHL Custom Provider**: https://marketplace.gohighlevel.com/docs/ghl/payments/custom-provider
     - **How to build a custom payments integration on the platform (flow)** https://help.gohighlevel.com/support/solutions/articles/155000002620-how-to-build-a-custom-payments-integration-on-the-platform
+    - **Google Cloud Run**: The target production environment is Google Cloud Run + Cloud SQL.

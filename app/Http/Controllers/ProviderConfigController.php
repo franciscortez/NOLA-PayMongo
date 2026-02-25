@@ -75,7 +75,10 @@ class ProviderConfigController extends Controller
         $providerResult = $this->providerConfigService->registerCustomProvider($locationId, $locationToken->access_token);
 
         if (!$providerResult['success']) {
-            return back()->with('error', 'Failed to register the Custom Provider in GHL.');
+            return back()->with([
+                'error' => 'Failed to register the Custom Provider in GHL.',
+                'error_details' => $providerResult['details'] ?? null
+            ]);
         }
 
         // 2. We can save the explicitly provided PayMongo keys to Ghl Connect Config API here 
@@ -92,7 +95,10 @@ class ProviderConfigController extends Controller
         );
 
         if (!$configResult['success']) {
-            return back()->with('error', 'Failed to push the PayMongo Pay keys to the Connect Config API in GHL.');
+            return back()->with([
+                'error' => 'Failed to push the PayMongo Pay keys to the Connect Config API in GHL.',
+                'error_details' => $configResult['details'] ?? null
+            ]);
         }
 
         return back()->with('success', 'Successfully registered PayMongo integration in GHL using your .env keys!');
@@ -118,7 +124,10 @@ class ProviderConfigController extends Controller
         $result = $this->providerConfigService->deleteProvider($locationId, $locationToken->access_token);
 
         if (!$result['success']) {
-            return back()->with('error', 'Failed to remove the provider from GHL: ' . ($result['error'] ?? ''));
+            return back()->with([
+                'error' => 'Failed to remove the provider from GHL: ' . ($result['error'] ?? ''),
+                'error_details' => $result['details'] ?? null
+            ]);
         }
 
         return back()->with('success', 'Provider successfully removed from GoHighLevel!');
@@ -162,7 +171,6 @@ class ProviderConfigController extends Controller
 
         return response()->json([
             'token_info' => $tokenInfo,
-            'ghl_provider' => $ghlConfig['provider'],
             'ghl_connect_config' => $ghlConfig['connectConfig'],
             'app_url' => config('app.url'),
             'expected_payments_url' => rtrim(config('app.url'), '/') . '/checkout',

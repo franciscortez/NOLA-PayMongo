@@ -62,15 +62,26 @@
             You've cancelled the checkout process. No charges have been made to your account.
          </p>
 
-         <div class="w-full bg-slate-50 rounded-xl p-3 text-xs text-slate-500 border border-slate-100">
-            This window will automatically close in a moment.
+         <div
+            class="w-full bg-slate-50 rounded-xl p-4 mb-4 text-sm text-slate-500 flex items-center justify-center gap-2 border border-slate-100">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400 animate-spin" fill="none"
+               viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+               <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            This window will close automatically...
          </div>
       </div>
    </div>
 
    <script>
       // The iFrame JS will detect the popup closed and handle the status check.
-      // Close the popup after a brief delay.
+      // Notify parent that we reached the cancel page.
+      if (window.parent && window.parent !== window) {
+         window.parent.postMessage({ type: 'checkout_cancelled' }, '*');
+      }
+
+      // Close the popup after a brief delay (legacy/fallback).
       setTimeout(function () {
          window.close();
       }, 3500);

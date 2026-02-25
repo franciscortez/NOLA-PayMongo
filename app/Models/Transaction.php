@@ -14,6 +14,7 @@ class Transaction extends Model
       'ghl_order_id',
       'ghl_location_id',
       'amount',
+      'amount_refunded',
       'currency',
       'description',
       'status',

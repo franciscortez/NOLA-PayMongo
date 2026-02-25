@@ -25,6 +25,7 @@ return new class extends Migration {
 
             // Payment details
             $table->integer('amount');                          // in cents
+            $table->integer('amount_refunded')->default(0);     // in cents
             $table->string('currency', 3)->default('PHP');
             $table->string('description')->nullable();
             $table->string('status')->default('pending');       // pending, paid, failed, refunded, expired

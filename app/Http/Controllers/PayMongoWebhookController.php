@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\WebhookProcessingService;
 use Illuminate\Support\Facades\Log;
+use App\Models\WebhookLog;
 
 class PayMongoWebhookController extends Controller
 {
@@ -29,25 +30,50 @@ class PayMongoWebhookController extends Controller
 
       $eventType = $payload['data']['attributes']['type'] ?? null;
       $eventData = $payload['data']['attributes']['data'] ?? null;
+      $eventId = $payload['data']['id'] ?? null;
 
-      if (!$eventType || !$eventData) {
-         Log::warning('PayMongo Webhook: Missing event type or data');
+      if (!$eventType || !$eventData || !$eventId) {
+         Log::warning('PayMongo Webhook: Missing event type, data, or ID');
          return response()->json(['message' => 'Invalid webhook payload'], 400);
       }
 
-      $handled = match ($eventType) {
-         'checkout_session.payment.paid' => $this->webhookProcessingService->processCheckoutSessionPaid($eventData),
-         'payment.paid' => $this->webhookProcessingService->processPaymentPaid($eventData),
-         'payment.failed' => $this->webhookProcessingService->processPaymentFailed($eventData),
-         'payment.refunded' => $this->webhookProcessingService->processPaymentRefunded($eventData),
-         default => null,
-      };
+      $webhookLog = WebhookLog::firstOrCreate(
+         ['event_id' => $eventId],
+         [
+            'event_type' => $eventType,
+            'payload' => $payload,
+            'status' => 'pending'
+         ]
+      );
 
-      if ($handled === null) {
-         return $this->handleUnknownEvent($eventType);
+      if (!$webhookLog->wasRecentlyCreated && $webhookLog->status === 'processed') {
+         Log::info('PayMongo Webhook: Skipped duplicate event', ['event_id' => $eventId]);
+         return response()->json(['message' => 'Already processed'], 200);
       }
 
-      return response()->json(['message' => 'OK'], 200);
+      try {
+         $handled = match ($eventType) {
+            'checkout_session.payment.paid' => $this->webhookProcessingService->processCheckoutSessionPaid($eventData),
+            'payment.paid' => $this->webhookProcessingService->processPaymentPaid($eventData),
+            'payment.failed' => $this->webhookProcessingService->processPaymentFailed($eventData),
+            'payment.refunded' => $this->webhookProcessingService->processPaymentRefunded($eventData),
+            default => null,
+         };
+
+         if ($handled === null) {
+            $webhookLog->update(['status' => 'skipped', 'error_message' => 'Unhandled event type']);
+            return $this->handleUnknownEvent($eventType);
+         }
+
+         $webhookLog->update(['status' => 'processed']);
+         return response()->json(['message' => 'OK'], 200);
+
+      } catch (\Exception $e) {
+         $webhookLog->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
+         Log::error("PayMongo Webhook Error: " . $e->getMessage(), ['exception' => $e]);
+         return response()->json(['message' => 'Error processing webhook'], 500);
+      }
+
    }
 
    /**

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class WebhookProcessingService
 {
@@ -121,15 +122,68 @@ class WebhookProcessingService
    public function processPaymentRefunded(array $eventData): bool
    {
       $paymentId = $eventData['id'] ?? null;
+      $attributes = $eventData['attributes'] ?? [];
 
       Log::info('WebhookProcessingService: payment.refunded', ['payment_id' => $paymentId]);
 
       $transaction = Transaction::where('payment_id', $paymentId)->first();
 
       if ($transaction) {
-         $transaction->update(['status' => 'refunded']);
+         // The webhook sends the refund amount or refunds array in the attributes
+         $refunds = $attributes['refunds']['data'] ?? [];
+         $totalRefundedInWebhook = 0;
+
+         foreach ($refunds as $refund) {
+            $totalRefundedInWebhook += $refund['attributes']['amount'] ?? 0;
+         }
+
+         // Fallback if 'refunds' array isn't populated but the event still fired
+         if ($totalRefundedInWebhook === 0 && isset($attributes['amount'])) {
+            // In some basic 'payment.refunded' payloads, the event itself might just represent the refund event
+            // But to be safe, we rely on the `refunds` data array sent by PayMongo.
+         }
+
+         // Update our total
+         $currentRefundedTotal = $transaction->amount_refunded;
+
+         // Only add refunds we don't already know about (Basic deduplication)
+         $metadata = $transaction->metadata ?? [];
+         $existingRefundIds = array_column($metadata['refunds'] ?? [], 'id');
+
+         $newRefundsAdded = false;
+
+         foreach ($refunds as $refund) {
+            if (!in_array($refund['id'], $existingRefundIds)) {
+               $currentRefundedTotal += $refund['attributes']['amount'];
+               $metadata['refunds'][] = [
+                  'id' => $refund['id'],
+                  'amount' => $refund['attributes']['amount'],
+                  'created_at' => Carbon::createFromTimestamp($refund['attributes']['created_at'] ?? now()->timestamp)->toIso8601String(),
+                  'source' => 'webhook'
+               ];
+               $newRefundsAdded = true;
+            }
+         }
+
+         if ($newRefundsAdded) {
+            $newStatus = ($currentRefundedTotal >= $transaction->amount) ? 'refunded' : 'partially_refunded';
+
+            $transaction->update([
+               'amount_refunded' => $currentRefundedTotal,
+               'status' => $newStatus,
+               'metadata' => $metadata
+            ]);
+
+            Log::info('WebhookProcessingService: Processed refund via webhook', [
+               'transaction_id' => $transaction->id,
+               'amount_refunded' => $currentRefundedTotal,
+               'status' => $newStatus
+            ]);
+         }
       }
 
       return true;
    }
 }
+
+

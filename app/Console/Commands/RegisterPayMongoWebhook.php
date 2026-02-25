@@ -25,6 +25,8 @@ class RegisterPayMongoWebhook extends Command
          'payment.refunded',
       ];
 
+
+
       $response = Http::withBasicAuth($payMongoService->getSecretKey(), '')
          ->post('https://api.paymongo.com/v1/webhooks', [
             'data' => [
@@ -46,6 +48,7 @@ class RegisterPayMongoWebhook extends Command
       $this->table(['Field', 'Value'], [
          ['ID', $data['id']],
          ['URL', $data['attributes']['url']],
+         ['Secret Key', $data['attributes']['secret_key'] ?? 'N/A'],
          ['Events', implode(', ', $data['attributes']['events'])],
          ['Status', $data['attributes']['status']],
       ]);

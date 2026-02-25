@@ -27,11 +27,6 @@ class QueryController extends Controller
       $type = $request->input('type');
       $apiKey = $request->input('apiKey');
 
-      Log::info('QueryController: Incoming GHL query', [
-         'type' => $type,
-         'payload' => $request->all(),
-      ]);
-
       // Determine which PayMongo secret key to use based on the apiKey GHL sends.
       // If the apiKey matches a test key, use test; otherwise use live.
       $service = $this->resolveService($apiKey);

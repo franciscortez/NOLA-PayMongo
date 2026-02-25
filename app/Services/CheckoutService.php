@@ -85,6 +85,14 @@ class CheckoutService
          'email' => $email,
          'phone' => $phone,
       ]);
+
+      if (isset($data['address']) && is_array($data['address'])) {
+         $addr = array_filter($data['address']);
+         if (!empty($addr)) {
+            $billing['address'] = $addr;
+         }
+      }
+
       if (!empty($billing)) {
          $payload['billing'] = $billing;
       }

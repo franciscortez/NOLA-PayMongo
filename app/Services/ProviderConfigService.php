@@ -103,6 +103,19 @@ class ProviderConfigService
    }
 
    /**
+    * Check if the Custom Payment Provider is currently registered in GHL.
+    */
+   public function isProviderRegistered(string $locationId, string $accessToken): bool
+   {
+      $response = Http::withHeaders([
+         'Authorization' => 'Bearer ' . $accessToken,
+         'Version' => config('services.ghl.api_version', '2021-07-28')
+      ])->get(config('services.ghl.api_base') . '/payments/custom-provider/connect?locationId=' . $locationId);
+
+      return $response->status() === 200;
+   }
+
+   /**
     * Deletes the Custom Payment Provider integration for the location.
     */
    public function deleteProvider(string $locationId, string $accessToken)

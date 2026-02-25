@@ -153,6 +153,22 @@ class PayMongoService
    }
 
    /**
+    * Validate a PayMongo Secret Key by making a lightweight API call.
+    */
+   public function validateKey(string $secretKey): bool
+   {
+      try {
+         $response = Http::withBasicAuth($secretKey, '')
+            ->get("{$this->baseUrl}/webhooks");
+
+         return $response->successful();
+      } catch (\Exception $e) {
+         Log::error('PayMongo: Key validation exception', ['error' => $e->getMessage()]);
+         return false;
+      }
+   }
+
+   /**
     * Create a refund for a PayMongo payment.
     */
    public function refundPayment(string $paymentId, int $amount, string $reason = 'requested_by_customer'): array

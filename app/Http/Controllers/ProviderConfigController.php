@@ -5,14 +5,17 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\ProviderConfigService;
 use App\Models\LocationToken;
+use App\Services\PayMongoService;
 
 class ProviderConfigController extends Controller
 {
     protected ProviderConfigService $providerConfigService;
+    protected PayMongoService $payMongoService;
 
-    public function __construct(ProviderConfigService $providerConfigService)
+    public function __construct(ProviderConfigService $providerConfigService, PayMongoService $payMongoService)
     {
         $this->providerConfigService = $providerConfigService;
+        $this->payMongoService = $payMongoService;
     }
 
     /**
@@ -26,7 +29,17 @@ class ProviderConfigController extends Controller
             return response('Location ID is missing', 400);
         }
 
-        return view('provider.config', ['locationId' => $locationId]);
+        $locationToken = LocationToken::where('location_id', $locationId)->first();
+
+        $isConnected = false;
+        if ($locationToken) {
+            $isConnected = $this->providerConfigService->isProviderRegistered($locationId, $locationToken->access_token);
+        }
+
+        return view('provider.config', [
+            'locationId' => $locationId,
+            'isConnected' => $isConnected
+        ]);
     }
 
     /**
@@ -46,6 +59,18 @@ class ProviderConfigController extends Controller
             return back()->with('error', 'Location token not found. Please re-authenticate.');
         }
 
+        // 0. Validate PayMongo Keys from environment before proceeding
+        $liveKey = config('services.paymongo.live_secret_key');
+        $testKey = config('services.paymongo.test_secret_key');
+
+        if (!$this->payMongoService->validateKey($testKey)) {
+            return back()->with('error', 'The PayMongo TEST Secret Key is invalid. Please check your .env file.');
+        }
+
+        if (config('services.paymongo.is_production') && !$this->payMongoService->validateKey($liveKey)) {
+            return back()->with('error', 'The PayMongo LIVE Secret Key is invalid. Please check your .env file.');
+        }
+
         // 1. Register the generic Custom Provider settings
         $providerResult = $this->providerConfigService->registerCustomProvider($locationId, $locationToken->access_token);
 
@@ -59,10 +84,10 @@ class ProviderConfigController extends Controller
             $locationId,
             $locationToken->access_token,
             [
-                'live_publishable_key' => env('PAYMONGO_LIVE_PUBLISHABLE_KEY'),
-                'live_secret_key' => env('PAYMONGO_LIVE_SECRET_KEY'),
-                'test_publishable_key' => env('PAYMONGO_TEST_PUBLISHABLE_KEY'),
-                'test_secret_key' => env('PAYMONGO_TEST_SECRET_KEY'),
+                'live_publishable_key' => config('services.paymongo.live_publishable_key'),
+                'live_secret_key' => $liveKey,
+                'test_publishable_key' => config('services.paymongo.test_publishable_key'),
+                'test_secret_key' => $testKey,
             ]
         );
 

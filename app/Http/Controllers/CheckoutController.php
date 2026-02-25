@@ -35,6 +35,13 @@ class CheckoutController extends Controller
          'name' => 'nullable|string|max:255',
          'email' => 'nullable|email|max:255',
          'phone' => 'nullable|string|max:20',
+         'address' => 'nullable|array',
+         'address.line1' => 'nullable|string|max:255',
+         'address.line2' => 'nullable|string|max:255',
+         'address.city' => 'nullable|string|max:255',
+         'address.state' => 'nullable|string|max:255',
+         'address.postal_code' => 'nullable|string|max:50',
+         'address.country' => 'nullable|string|size:2',
          'product_details' => 'nullable|array',
          'product_details.*.name' => 'required_with:product_details|string',
          'product_details.*.price' => 'required_with:product_details|numeric',
@@ -78,8 +85,6 @@ class CheckoutController extends Controller
     */
    public function success(Request $request)
    {
-      Log::info('Checkout: Success callback', $request->all());
-
       return view('checkout.success', [
          'transactionId' => $request->query('transaction_id', ''),
          'orderId' => $request->query('order_id', ''),
@@ -91,8 +96,6 @@ class CheckoutController extends Controller
     */
    public function cancel(Request $request)
    {
-      Log::info('Checkout: Cancel callback', $request->all());
-
       return view('checkout.cancel');
    }
 }

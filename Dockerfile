@@ -1,7 +1,42 @@
-FROM php:8.2-apache
+# Stage 1: Build assets (Node/NPM)
+FROM node:20-slim AS asset-builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
+# Stage 2: Install PHP dependencies (Composer) - match PHP runtime
+FROM php:8.4-cli AS composer-builder
+WORKDIR /app
+
+# Install composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Install git and unzip
+RUN apt-get update && apt-get install -y git unzip && rm -rf /var/lib/apt/lists/*
+
+# Copy composer files first for better caching
+COPY composer.json composer.lock ./
+RUN composer install \
+  --no-dev \
+  --prefer-dist \
+  --no-interaction \
+  --no-progress \
+  --no-scripts \
+  --no-autoloader
+
+# Copy the rest of the app
+COPY . .
+
+# Re-optimize autoloader (optional but common)
+RUN composer dump-autoload --optimize --classmap-authoritative
+
+
+# Stage 3: Final Production Image
+FROM php:8.4-apache
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
@@ -9,45 +44,49 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     git \
-    curl
+    curl \
+  && rm -rf /var/lib/apt/lists/*
 
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Opcache
+RUN docker-php-ext-enable opcache
+COPY ./docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
-# Set working directory
+# Apache
+RUN a2enmod rewrite headers
+
 WORKDIR /var/www/html
 
-# Install Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+# Copy app + vendor from composer stage
+COPY --from=composer-builder /app /var/www/html
 
-# Copy only composer files initially to leverage Docker cache
-COPY composer.json composer.lock ./
+# Copy built assets
+COPY --from=asset-builder /app/public/build /var/www/html/public/build
 
-# Install dependencies
-RUN composer install --no-scripts --no-autoloader
+# Laravel permissions
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+ && chmod -R ug+rwX /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Copy existing application directory contents
-COPY . .
+# Apache DocumentRoot for Laravel
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/000-default.conf \
+ && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-# Finish composer setup
-RUN composer dump-autoload --optimize
+# Cloud Run: listen on 8080 (don’t try to use ${PORT} in apache config)
+RUN sed -i 's/80/8080/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Logs to stdout/stderr
+RUN ln -sf /dev/stderr /var/log/apache2/error.log \
+ && ln -sf /dev/stdout /var/log/apache2/access.log
 
-# Configure Apache for Cloud Run ($PORT)
-RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf
-
-# Set default Environment variables required for production
 ENV PORT=8080
+ENV APP_ENV=production
+ENV APP_DEBUG=false
 
 EXPOSE 8080
 
-# Start Apache
+# Optional hardening: run as www-data (works since we’re on 8080)
+USER www-data
+
 CMD ["apache2-foreground"]

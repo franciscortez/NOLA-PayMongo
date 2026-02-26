@@ -94,6 +94,7 @@ class PayMongoService
          'id' => $data['id'],
          'checkout_url' => $data['attributes']['checkout_url'],
          'status' => $data['attributes']['status'] ?? 'active',
+         'payment_intent_id' => $data['attributes']['payment_intent']['id'] ?? $data['attributes']['payment_intent']['attributes']['id'] ?? null,
       ];
    }
 
@@ -122,6 +123,34 @@ class PayMongoService
          'amount' => $data['attributes']['amount'],
          'currency' => $data['attributes']['currency'],
          'payments' => $data['attributes']['payments'] ?? [],
+      ];
+   }
+
+   /**
+    * Retrieve a Payment by its ID.
+    */
+   public function retrievePayment(string $paymentId): array
+   {
+      $response = Http::withBasicAuth($this->getSecretKey(), '')
+         ->get("{$this->baseUrl}/payments/{$paymentId}");
+
+      if (!$response->successful()) {
+         Log::error('PayMongo: RetrievePayment failed', [
+            'id' => $paymentId,
+            'body' => $response->json(),
+         ]);
+         return ['success' => false, 'error' => $response->json()];
+      }
+
+      $data = $response->json('data');
+
+      return [
+         'success' => true,
+         'id' => $data['id'],
+         'status' => $data['attributes']['status'],
+         'amount' => $data['attributes']['amount'],
+         'currency' => $data['attributes']['currency'],
+         'paid_at' => $data['attributes']['paid_at'] ?? null,
       ];
    }
 

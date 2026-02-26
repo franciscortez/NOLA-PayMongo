@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\CheckoutService;
-use Illuminate\Support\Facades\Log;
+use App\Http\Requests\CheckoutSessionRequest;
+
 
 class CheckoutController extends Controller
 {
@@ -26,33 +27,16 @@ class CheckoutController extends Controller
    /**
     * AJAX endpoint: Create a PayMongo Checkout Session and return the URL.
     */
-   public function createCheckoutSession(Request $request)
+   public function createCheckoutSession(CheckoutSessionRequest $request)
    {
-      $request->validate([
-         'amount' => 'required|integer|min:100',
-         'currency' => 'required|string|size:3',
-         'description' => 'nullable|string|max:255',
-         'name' => 'nullable|string|max:255',
-         'email' => 'nullable|email|max:255',
-         'phone' => 'nullable|string|max:20',
-         'address' => 'nullable|array',
-         'address.line1' => 'nullable|string|max:255',
-         'address.line2' => 'nullable|string|max:255',
-         'address.city' => 'nullable|string|max:255',
-         'address.state' => 'nullable|string|max:255',
-         'address.postal_code' => 'nullable|string|max:50',
-         'address.country' => 'nullable|string|size:2',
-         'product_details' => 'nullable|array',
-         'product_details.*.name' => 'required_with:product_details|string',
-         'product_details.*.price' => 'required_with:product_details|numeric',
-         'product_details.*.qty' => 'required_with:product_details|integer|min:1',
-      ]);
+      // The data is already validated and sanitized by CheckoutSessionRequest
+      $validated = $request->validated();
 
       $publishableKey = $request->input('publishable_key', '');
       $isLiveModeFallback = $request->input('is_live_mode', false);
 
       $result = $this->checkoutService->createSession(
-         $request->all(),
+         $validated,
          $publishableKey,
          $isLiveModeFallback
       );

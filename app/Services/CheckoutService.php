@@ -73,11 +73,6 @@ class CheckoutService
          'success_url' => $successUrl,
          'cancel_url' => $cancelUrl,
          'line_items' => $lineItems,
-         'metadata' => array_filter([
-            'ghl_transaction_id' => $transactionId,
-            'ghl_order_id' => $orderId,
-            'ghl_location_id' => $locationId,
-         ]),
       ];
 
       $billing = array_filter([
@@ -97,6 +92,18 @@ class CheckoutService
          $payload['billing'] = $billing;
       }
 
+      $metadata = array_filter([
+         'ghl_transaction_id' => $transactionId,
+         'ghl_order_id' => $orderId,
+         'ghl_location_id' => $locationId,
+      ]);
+
+      // PayMongo rigorously requires metadata to not be blank.
+      // If we don't have any metadata IDs to pass, we must omit the field entirely.
+      if (!empty($metadata)) {
+         $payload['metadata'] = $metadata;
+      }
+
       $isLiveMode = str_starts_with($publishableKey ?? '', 'pk_live_') || $isLiveModeFallback;
       $service = $this->payMongoService->setProduction($isLiveMode);
 
@@ -112,6 +119,7 @@ class CheckoutService
 
       Transaction::create([
          'checkout_session_id' => $result['id'],
+         'payment_intent_id' => $result['payment_intent_id'] ?? null,
          'ghl_transaction_id' => $transactionId ?: null,
          'ghl_order_id' => $orderId ?: null,
          'ghl_location_id' => $locationId ?: null,

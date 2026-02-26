@@ -21,6 +21,17 @@ class WebhookProcessingService
       $attributes = $eventData['attributes'] ?? [];
       $payments = $attributes['payments'] ?? [];
 
+      // PayMongo checkout webhooks often only send the ID without nested attributes
+      if (empty($payments) && $checkoutSessionId) {
+         $service = app(PayMongoService::class);
+         $result = $service->retrieveCheckoutSession($checkoutSessionId);
+         if ($result['success']) {
+            $paymentIntent = $result['payment_intent'] ?? null;
+            $attributes['payment_intent'] = $paymentIntent;
+            $payments = $result['payments'] ?? [];
+         }
+      }
+
       Log::info('WebhookProcessingService: checkout_session.payment.paid', [
          'checkout_session_id' => $checkoutSessionId,
          'payments_count' => count($payments),

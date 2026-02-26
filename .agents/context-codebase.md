@@ -124,7 +124,7 @@ PayMongo sends webhook to /api/webhook/paymongo
       → payment.failed — marks transaction as 'failed'
       → payment.refunded — marks transaction as 'refunded'
     → On success: Updates log to 'processed'
-    → If paid: GhlWebhookService sends payment.captured event to GHL
+    → If paid: Dispatches `SendGhlWebhookJob` (Queue) to send `payment.captured` event to GHL (includes automatic retries on failure)
 ```
 
 ### 4. GHL Query Handler
@@ -147,8 +147,8 @@ GHL sends POST to /api/webhook/ghl-query with { type: "..." }
 | Column        | Type            | Description                                  |
 | ------------- | --------------- | -------------------------------------------- |
 | location_id   | string (unique) | GHL sub-account location ID                  |
-| access_token  | text            | GHL OAuth access token                       |
-| refresh_token | text            | GHL OAuth refresh token                      |
+| access_token  | text            | GHL OAuth access token (Encrypted)           |
+| refresh_token | text            | GHL OAuth refresh token (Encrypted)          |
 | expires_at    | timestamp       | Token expiry (Auto-refreshed via middleware) |
 | user_type     | string          | Usually "Location"                           |
 
@@ -221,7 +221,11 @@ PAYMONGO_WEBHOOK_SECRET=whsk_xxx
     - `POST /refunds` — Create a refund
 - **Payment Methods**: card, gcash, grab_pay, paymaya, qrph
 - **Currency**: PHP (amounts in centavos)
-- **Webhooks**: `checkout_session.payment.paid`, `payment.paid`, `payment.failed`, `payment.refunded`
+- **Webhooks Handling (Events)**:
+    - `checkout_session.payment.paid` — Fired when a checkout is completed (primary trigger)
+    - `payment.paid` — Fired when a payment intent is completed (fallback)
+    - `payment.failed` — Fired when a payment fails (e.g., declined card)
+    - `payment.refunded` — Fired when a refund is fully or partially processed
 - **Testing**: https://developers.paymongo.com/docs/testing (Provides test card numbers for basic, 3DS, and error scenarios like `card_expired`, `cvc_invalid`, `insufficient_funds`, etc.)
 
 ### GoHighLevel API (v2021-07-28)
@@ -230,6 +234,15 @@ PAYMONGO_WEBHOOK_SECRET=whsk_xxx
 - **Integration Flow Guide**: https://help.gohighlevel.com/support/solutions/articles/155000002620-how-to-build-a-custom-payments-integration-on-the-platform
 - **Base URL**: `https://services.leadconnectorhq.com`
 - **Auth**: Bearer token (OAuth2 — Location-level)
+- **OAuth Scopes (Marketplace App)**:
+    - `payments/orders.readonly`
+    - `payments/orders.write`
+    - `payments/subscriptions.readonly`
+    - `payments/transactions.readonly`
+    - `payments/custom-provider.readonly`
+    - `payments/custom-provider.write`
+    - `products.readonly`
+    - `products/prices.readonly`
 - **Custom Provider Endpoints**:
     - `POST /payments/custom-provider/provider?locationId=` — Register provider
     - `DELETE /payments/custom-provider/provider?locationId=` — Delete provider
@@ -243,6 +256,19 @@ PAYMONGO_WEBHOOK_SECRET=whsk_xxx
     5. App processes payment and responds with `custom_element_success_response` or `custom_element_error_response`
     6. GHL verifies via queryUrl (`type: verify`)
 - **queryUrl Actions**: `verify`, `refund`, `list_payment_methods`, `charge_payment`
+
+### Docker & Google Cloud Platform (GCP) Deployment
+
+- **Hosting Target**: Google Cloud Run (Fully managed serverless container platform)
+- **Deployment Flow**: Source Code → Docker Image → Google Artifact Registry → Google Cloud Run
+- **Docker Documentation**:
+    - [Dockerize a Laravel Application](https://docs.docker.com/language/php/)
+    - [Dockerfile Reference](https://docs.docker.com/reference/dockerfile/)
+- **GCP Documentation**:
+    - [Google Cloud Run Documentation](https://cloud.google.com/run/docs)
+    - [Deploying PHP apps to Cloud Run](https://cloud.google.com/run/docs/quickstarts/build-and-deploy/deploy-php-service)
+    - [Connecting Cloud Run to Cloud SQL (MySQL)](https://cloud.google.com/sql/docs/mysql/connect-run)
+    - [Secret Manager (for .env keys)](https://cloud.google.com/secret-manager/docs/overview)
 
 ---
 

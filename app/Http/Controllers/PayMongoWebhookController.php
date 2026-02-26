@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\PayMongoWebhookRequest;
 use App\Services\WebhookProcessingService;
 use Illuminate\Support\Facades\Log;
 use App\Models\WebhookLog;
@@ -20,9 +20,9 @@ class PayMongoWebhookController extends Controller
     * Handle incoming PayMongo webhook events.
     * POST /api/webhook/paymongo
     */
-   public function handle(Request $request)
+   public function handle(PayMongoWebhookRequest $request)
    {
-      $payload = $request->all();
+      $payload = $request->validated();
 
       Log::info('PayMongo Webhook: Received', [
          'type' => $payload['data']['attributes']['type'] ?? 'unknown',

@@ -16,5 +16,7 @@ class LocationToken extends Model
 
     protected $casts = [
         'expires_at' => 'datetime',
+        'access_token' => 'encrypted',
+        'refresh_token' => 'encrypted',
     ];
 }

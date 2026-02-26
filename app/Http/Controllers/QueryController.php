@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\QueryUrlRequest;
 use App\Services\PayMongoService;
 use App\Services\GhlQueryService;
 use Illuminate\Support\Facades\Log;
@@ -22,13 +22,13 @@ class QueryController extends Controller
     * Handle all incoming queryUrl requests from GHL.
     * GHL POSTs JSON with a "type" field to dispatch the action.
     */
-   public function handle(Request $request)
+   public function handle(QueryUrlRequest $request)
    {
-      $payload = $request->all();
+      $payload = $request->validated();
       Log::info('QueryController: received payload', ['payload' => $payload]);
 
-      $type = $request->input('type');
-      $apiKey = $request->input('apiKey');
+      $type = $payload['type'];
+      $apiKey = $payload['apiKey'] ?? null;
 
       // Determine which PayMongo secret key to use based on the apiKey GHL sends.
       // If the apiKey matches a test key, use test; otherwise use live.
@@ -60,7 +60,7 @@ class QueryController extends Controller
     * GHL sends: { type: "verify", transactionId, apiKey, chargeId, subscriptionId? }
     * We must return: { success: true } or { failed: true }
     */
-   protected function handleVerify(Request $request, PayMongoService $service)
+   protected function handleVerify(QueryUrlRequest $request, PayMongoService $service)
    {
       $chargeId = $request->input('chargeId', '');
       return response()->json($this->ghlQueryService->verifyPayment($chargeId, $service));
@@ -72,7 +72,7 @@ class QueryController extends Controller
     * GHL sends: { type: "refund", amount, transactionId, chargeId, apiKey }
     * We must return: { success: true, id, amount, currency, message }
     */
-   protected function handleRefund(Request $request, PayMongoService $service)
+   protected function handleRefund(QueryUrlRequest $request, PayMongoService $service)
    {
       $chargeId = $request->input('chargeId', '');
       $amount = (float) $request->input('amount', 0);
@@ -83,7 +83,7 @@ class QueryController extends Controller
     * List saved payment methods for a contact.
     * Placeholder — will be implemented with Card Vaulting in a future step.
     */
-   protected function handleListPaymentMethods(Request $request)
+   protected function handleListPaymentMethods(QueryUrlRequest $request)
    {
       Log::info('QueryController: list_payment_methods called (not yet implemented)');
 
@@ -95,7 +95,7 @@ class QueryController extends Controller
     * Charge a saved payment method.
     * Placeholder — will be implemented with Card Vaulting in a future step.
     */
-   protected function handleChargePayment(Request $request, PayMongoService $service)
+   protected function handleChargePayment(QueryUrlRequest $request, PayMongoService $service)
    {
       Log::info('QueryController: charge_payment called (not yet implemented)');
 

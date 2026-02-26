@@ -52,8 +52,10 @@ class GhlQueryService
 
       $isCheckoutSession = str_starts_with($chargeId, 'cs_');
 
-      if ($isCheckoutSession) {
+      if (str_starts_with($chargeId, 'cs_')) {
          $result = $service->retrieveCheckoutSession($chargeId);
+      } elseif (str_starts_with($chargeId, 'pay_')) {
+         $result = $service->retrievePayment($chargeId);
       } else {
          $result = $service->retrievePaymentIntent($chargeId);
       }
@@ -79,10 +81,14 @@ class GhlQueryService
 
       if ($status === 'succeeded' || $status === 'paid') {
          $isActuallyPaid = true;
-         // Try finding it within nested payments if available
+         // Use paid_at from top level if available (for Payment objects)
+         if (isset($result['paid_at'])) {
+            $paidAt = \Carbon\Carbon::createFromTimestamp($result['paid_at']);
+         }
+         // Try finding it within nested payments if available (for Checkout Sessions or Intents)
          if ($payment && isset($payment['id'])) {
             $paymentId = $payment['id'];
-            $paidAt = \Carbon\Carbon::createFromTimestamp($payment['attributes']['paid_at'] ?? now()->timestamp);
+            $paidAt = \Carbon\Carbon::createFromTimestamp($payment['attributes']['paid_at'] ?? $paidAt->timestamp);
          }
       } elseif ($payment && ($payment['attributes']['status'] ?? '') === 'paid') {
          $isActuallyPaid = true;
@@ -97,9 +103,14 @@ class GhlQueryService
          ]);
 
          if ($transaction && $transaction->isPending()) {
+            $paymentIntentId = isset($result['payment_intent']) && is_array($result['payment_intent'])
+               ? ($result['payment_intent']['id'] ?? $transaction->payment_intent_id)
+               : $transaction->payment_intent_id;
+
             $transaction->update([
                'status' => 'paid',
                'payment_id' => $paymentId !== $chargeId ? $paymentId : $transaction->payment_id,
+               'payment_intent_id' => $paymentIntentId,
                'paid_at' => $paidAt
             ]);
          }
@@ -122,7 +133,7 @@ class GhlQueryService
          'chargeSnapshot' => [
             'id' => $paymentId,
             'status' => 'succeeded',
-            'amount' => $result['amount'] / 100,
+            'amount' => ($result['amount'] ?? ($transaction->amount ?? 0)) / 100,
             'chargeId' => $chargeId,
             'chargedAt' => now()->timestamp,
          ],

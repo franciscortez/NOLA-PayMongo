@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\ProviderConfigRequest;
 use App\Services\ProviderConfigService;
 use App\Models\LocationToken;
 use App\Services\PayMongoService;
@@ -21,9 +21,10 @@ class ProviderConfigController extends Controller
     /**
      * Show the configuration UI for installing PayMongo and setting keys.
      */
-    public function show(Request $request)
+    public function show(ProviderConfigRequest $request)
     {
-        $locationId = $request->query('location_id') ?? $request->query('locationId');
+        $validated = $request->validated();
+        $locationId = $validated['location_id'] ?? ($validated['locationId'] ?? null);
 
         if (!$locationId) {
             return response('Location ID is missing', 400);
@@ -45,13 +46,10 @@ class ProviderConfigController extends Controller
     /**
      * Handle the explicit installation of the Custom Provider and API keys connection.
      */
-    public function connect(Request $request)
+    public function connect(ProviderConfigRequest $request)
     {
-        $request->validate([
-            'location_id' => 'required|string',
-        ]);
-
-        $locationId = $request->input('location_id');
+        $validated = $request->validated();
+        $locationId = $validated['location_id'] ?? $validated['locationId'];
 
         $locationToken = LocationToken::where('location_id', $locationId)->first();
 
@@ -107,13 +105,10 @@ class ProviderConfigController extends Controller
     /**
      * Remove the Custom Provider from GHL.
      */
-    public function delete(Request $request)
+    public function delete(ProviderConfigRequest $request)
     {
-        $request->validate([
-            'location_id' => 'required|string',
-        ]);
-
-        $locationId = $request->input('location_id');
+        $validated = $request->validated();
+        $locationId = $validated['location_id'] ?? $validated['locationId'];
 
         $locationToken = LocationToken::where('location_id', $locationId)->first();
 
@@ -136,9 +131,10 @@ class ProviderConfigController extends Controller
     /**
      * Diagnostic endpoint: shows current GHL provider registration status.
      */
-    public function diagnose(Request $request)
+    public function diagnose(ProviderConfigRequest $request)
     {
-        $locationId = $request->query('location_id') ?? $request->query('locationId');
+        $validated = $request->validated();
+        $locationId = $validated['location_id'] ?? ($validated['locationId'] ?? null);
 
         if (!$locationId) {
             return response()->json(['error' => 'location_id query param required'], 400);

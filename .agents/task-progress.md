@@ -16,8 +16,8 @@
 - [x] Exchange authorization code for access/refresh tokens
 - [x] Save tokens to `location_tokens` table
 - [x] Redirect to provider config page after OAuth
-- [x] **Auto-refresh expired tokens** — `GhlService::refreshToken()` exists and is called automatically via `CheckGhlToken` middleware
-- [x] **Token expiry check middleware** — Validates token freshness before any GHL API call
+- [x] Auto-refresh expired tokens — `GhlService::refreshToken()` exists and is called automatically via `CheckGhlToken` middleware
+- [x] Token expiry check middleware — Validates token freshness before any GHL API call
 
 ### [x] 1️⃣ Priority: Multi-location & Error Handling
 
@@ -43,7 +43,7 @@
 - [x] Display current provider connection status — Show whether provider is already connected before offering connect/disconnect.
 - [x] Fetch existing provider config from GHL — Use `GET /payments/custom-provider/provider` to check registration state.
 - [x] Provider config validation — Verify API keys are valid before pushing to GHL.
-- [x] **Support central PayMongo keys** — Uses environment variables since this is a private integration.
+- [x] Support central PayMongo keys — Uses environment variables since this is a private integration.
 - [ ] **Provider config error detail display** — Show GHL API error details on failure, not just generic messages
 
 ---
@@ -62,10 +62,10 @@
 - [x] Notify GHL with `custom_element_success_response`
 - [x] Notify GHL with `custom_element_error_response`
 - [x] Success and cancel callback pages
-- [x] **Support multiple line items** — Parses `productDetails` array from GHL into mapped PayMongo line items
-- [x] **Inline payment form** — Embed PayMongo Elements directly in iFrame
-- [x] **Handle expired checkout sessions** — Auto-create new session if previous one expired
-- [x] **Customer billing address** — Pass full address from GHL contact to PayMongo
+- [x] Support multiple line items — Parses `productDetails` array from GHL into mapped PayMongo line items
+- [x] Inline payment form — Embed PayMongo Elements directly in iFrame
+- [x] Handle expired checkout sessions — Auto-create new session if previous one expired
+- [x] Customer billing address — Pass full address from GHL contact to PayMongo
 - [ ] **Currency support beyond PHP** — Handle GHL locations using USD or other currencies
 - [ ] **Checkout timeout configuration** — Make the 30s handshake timeout configurable
 
@@ -78,8 +78,8 @@
 - [x] Verify payment status (`type: verify`) — DB-first with PayMongo API fallback
 - [x] Build chargeSnapshot response for GHL
 - [x] Resolve test vs live PayMongo key from GHL `apiKey`
-- [x] **Improve verify resilience** — Handle race conditions where webhook hasn't arrived yet (add retry/wait logic)
-- [x] **Verify by multiple ID types** — Support lookup by `payment_id`, `checkout_session_id`, or `ghl_transaction_id` more robustly
+- [x] Improve verify resilience — Handle race conditions where webhook hasn't arrived yet (add retry/wait logic)
+- [x] Verify by multiple ID types — Support lookup by `payment_id`, `checkout_session_id`, or `ghl_transaction_id` more robustly
 
 ---
 
@@ -90,9 +90,9 @@
 - [x] Refund payment via PayMongo API
 - [x] Update transaction status to `refunded` in DB
 - [x] Return refund result to GHL
-- [x] **Partial refund support** — Verify partial refund amounts work correctly end-to-end
-- [x] **Refund status tracking** — Store refund ID and amount in transaction metadata
-- [x] **Refund webhook handling** — Process `payment.refunded` webhook from PayMongo
+- [x] Partial refund support — Verify partial refund amounts work correctly end-to-end
+- [x] Refund status tracking — Store refund ID and amount in transaction metadata
+- [x] Refund webhook handling — Process `payment.refunded` webhook from PayMongo
 - [ ] **Refund failure handling** — Better error messages for failed refunds (insufficient balance, already refunded)
 
 ---
@@ -107,16 +107,16 @@
 - [x] Handle `payment.failed`
 - [x] Handle `payment.refunded`
 - [x] Forward `payment.captured` event to GHL webhook
-- [x] **PayMongo webhook signature verification** — Validates `X-Paymongo-Signature` header against webhook secret to prevent spoofing
-- [x] **Webhook retry/idempotency** — Prevent duplicate processing of the same webhook event
-- [x] **Webhook event logging table** — Store raw webhook payloads for debugging/audit trail
+- [x] PayMongo webhook signature verification — Validates `X-Paymongo-Signature` header against webhook secret to prevent spoofing
+- [x] Webhook retry/idempotency — Prevent duplicate processing of the same webhook event
+- [x] Webhook event logging table — Store raw webhook payloads for debugging/audit trail
 - [ ] **Failed GHL webhook notification retry** — Queue and retry if GHL webhook delivery fails
 
 ### [x] 1️⃣ Priority: Transaction Expiration Handling
 
 > Handle stale transactions and expiration events.
 
-- [x] **Handle `payment.expired` events** — Update transaction status when PayMongo sessions expire.
+- [x] Handle `payment.expired` events — Update transaction status when PayMongo sessions expire.
 - [x] Stale transaction cleanup — Mark transactions as `expired` if pending for >24 hours.
 
 ## 7. 💾 Transaction Management
@@ -126,7 +126,7 @@
 - [x] Transaction model with scopes (`paid`, `pending`, `failed`, `byLocation`)
 - [x] Transaction creation on checkout session
 - [x] Status updates from webhooks and polling
-- [x] **Stale transaction cleanup** — Mark transactions as `expired` if pending for >24 hours
+- [x] Stale transaction cleanup — Mark transactions as `expired` if pending for >24 hours
 
 ---
 
@@ -148,9 +148,9 @@
 
 - [ ] **HTTPS enforcement** — Ensure all endpoints require HTTPS (currently relies on ngrok)
 - [ ] **Rate limiting** — Add rate limits on checkout creation and webhook endpoints
-- [ ] **Input sanitization** — Validate and sanitize all incoming data from GHL and PayMongo
+- [x] Input sanitization — Validate and sanitize all incoming data from GHL and PayMongo
 - [ ] **PayMongo webhook signature verification** — Validate webhook authenticity
-- [ ] **Encrypt stored tokens** — Encrypt `access_token` and `refresh_token` at rest
+- [x] Encrypt stored tokens — Encrypt `access_token` and `refresh_token` at rest
 - [ ] **CSRF protection on API routes** — Review CSRF exclusions for webhook endpoints
 - [ ] **Logging & monitoring** — Structured logging for production debugging
 
@@ -164,8 +164,8 @@
 - [ ] **Deploy to Google Cloud Run** — Containerize the app and deploy serverless via GCP
 - [ ] **Cloud SQL Setup** — Set up managed MySQL for transaction data
 - [ ] **Queue worker setup** — Configure Laravel queues for webhook processing
-- [x] **Health check endpoint** — Dedicated `/api/health` checking DB status
-- [x] **Provider Diagnose endpoint** — Extracted to `/api/provider/diagnose` to validate GHL config state
+- [x] Health check endpoint — Dedicated `/api/health` checking DB status
+- [x] Provider Diagnose endpoint — Extracted to `/api/provider/diagnose` to validate GHL config state
 - [ ] **CI/CD pipeline** — Automated testing and deployment
 - [ ] **Environment-specific configs** — Separate configs for staging and production
 

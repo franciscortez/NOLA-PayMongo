@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use App\Services\CheckoutService;
 use App\Services\PayMongoService;
 use App\Models\Transaction;
@@ -11,7 +11,7 @@ use Mockery;
 
 class CheckoutServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations;
 
     protected function tearDown(): void
     {

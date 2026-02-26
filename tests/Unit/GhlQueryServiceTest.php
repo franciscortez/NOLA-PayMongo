@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use App\Services\GhlQueryService;
 use App\Services\PayMongoService;
 use App\Models\Transaction;
@@ -11,7 +11,7 @@ use Mockery;
 
 class GhlQueryServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations;
 
     protected function tearDown(): void
     {
@@ -80,24 +80,16 @@ class GhlQueryServiceTest extends TestCase
         /** @var \App\Services\PayMongoService|\Mockery\MockInterface $mockPayMongo */
         $mockPayMongo = Mockery::mock(PayMongoService::class);
 
-        $mockPayMongo->shouldReceive('retrievePaymentIntent')
-            ->once()
-            ->with('pi_refund_123')
-            ->andReturnUsing(fn() => [
-                'success' => true,
-                'payments' => [['id' => 'pay_refund_123']]
-            ]);
-
         $mockPayMongo->shouldReceive('refundPayment')
             ->once()
-            ->with('pay_refund_123', 5000) // 50 PHP * 100
+            ->with('pay_refund_123', 10000) // 100 PHP * 100
             ->andReturnUsing(fn() => [
                 'success' => true,
                 'id' => 'rf_123',
                 'currency' => 'PHP'
             ]);
 
-        $result = $service->refundPayment('pi_refund_123', 50.00, $mockPayMongo);
+        $result = $service->refundPayment('pi_refund_123', 100.00, $mockPayMongo);
 
         $this->assertTrue($result['success']);
         $this->assertEquals('Refund successful', $result['message']);

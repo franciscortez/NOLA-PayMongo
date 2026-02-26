@@ -2,17 +2,18 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
+use App\Models\Transaction;
 use App\Models\WebhookLog;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
 
 class PayMongoWebhookControllerTest extends TestCase
 {
-    use RefreshDatabase, WithoutMiddleware;
+    use DatabaseMigrations, WithoutMiddleware;
 
 
     /**
@@ -23,6 +24,7 @@ class PayMongoWebhookControllerTest extends TestCase
         $payload = [
             'data' => [
                 'id' => 'evt_123',
+                'type' => 'event',
                 'attributes' => [
                     'type' => 'payment.paid',
                     'data' => [
@@ -55,7 +57,7 @@ class PayMongoWebhookControllerTest extends TestCase
     {
         // Insert a processed record
         WebhookLog::create([
-            'event_id' => 'evt_duplicate_456',
+            'event_id' => 'evt_duplicate456',
             'event_type' => 'payment.paid',
             'payload' => ['fake' => 'data'],
             'status' => 'processed'
@@ -63,7 +65,8 @@ class PayMongoWebhookControllerTest extends TestCase
 
         $payload = [
             'data' => [
-                'id' => 'evt_duplicate_456',
+                'id' => 'evt_duplicate456',
+                'type' => 'event',
                 'attributes' => [
                     'type' => 'payment.paid',
                     'data' => [

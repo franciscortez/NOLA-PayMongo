@@ -3,7 +3,7 @@
 namespace Tests\Unit;
 
 use Tests\TestCase;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use App\Services\WebhookProcessingService;
 use App\Services\GhlWebhookService;
 use App\Models\Transaction;
@@ -11,7 +11,7 @@ use Mockery;
 
 class WebhookProcessingServiceTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations;
 
     protected function tearDown(): void
     {
@@ -111,6 +111,19 @@ class WebhookProcessingServiceTest extends TestCase
 
         $eventData = [
             'id' => 'pay_refund_123',
+            'attributes' => [
+                'refunds' => [
+                    'data' => [
+                        [
+                            'id' => 'rf_123',
+                            'attributes' => [
+                                'amount' => 5000,
+                                'created_at' => now()->timestamp,
+                            ]
+                        ]
+                    ]
+                ]
+            ]
         ];
 
         $result = $service->processPaymentRefunded($eventData);

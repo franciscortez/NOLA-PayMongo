@@ -6,12 +6,12 @@ use Tests\TestCase;
 use App\Models\Transaction;
 use App\Services\GhlQueryService;
 use App\Services\PayMongoService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Mockery;
 
 class GhlQueryServiceVerifyRefundTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations;
 
     protected function setUp(): void
     {

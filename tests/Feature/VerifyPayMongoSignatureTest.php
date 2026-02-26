@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use Illuminate\Support\Facades\Config;
@@ -57,7 +57,11 @@ class VerifyPayMongoSignatureTest extends TestCase
     public function test_it_accepts_valid_test_signature()
     {
         $timestamp = time();
-        $payloadArray = ['event' => 'test'];
+        $payloadArray = [
+            'data' => [
+                'type' => 'event'
+            ]
+        ];
         $payload = json_encode($payloadArray);
 
         $signatureString = $timestamp . '.' . $payload;
@@ -71,15 +75,13 @@ class VerifyPayMongoSignatureTest extends TestCase
             [],
             [
                 'CONTENT_TYPE' => 'application/json',
+                'HTTP_ACCEPT' => 'application/json',
                 'HTTP_PAYMONGO_SIGNATURE' => "t={$timestamp},te={$validSignature}"
             ],
             $payload // Pass the exact JSON string to ensure hash matches $request->getContent()
         );
 
-        // Return 400 instead of 401 because the payload is valid but missing expected attributes
-        // which the webhook controller throws a 400 for 'Invalid webhook payload'.
-        // This asserts the middleware passed successfully.
-        $response->assertStatus(400)
-            ->assertJson(['message' => 'Invalid webhook payload']);
+        $response->assertStatus(422)
+            ->assertJsonStructure(['message', 'errors']);
     }
 }

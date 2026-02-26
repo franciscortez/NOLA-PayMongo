@@ -73,24 +73,6 @@ class ProviderConfigService
       return ['success' => true];
    }
 
-   /**
-    * Fetches the current provider config from GHL for diagnostics.
-    */
-   public function fetchProviderConfig(string $locationId, string $accessToken)
-   {
-      // Fetch the connect config (API keys & App Data)
-      $connectResponse = Http::withHeaders([
-         'Authorization' => 'Bearer ' . $accessToken,
-         'Version' => config('services.ghl.api_version', '2021-07-28')
-      ])->get(config('services.ghl.api_base') . '/payments/custom-provider/connect?locationId=' . $locationId);
-
-      return [
-         'connectConfig' => [
-            'status' => $connectResponse->status(),
-            'data' => $connectResponse->json(),
-         ],
-      ];
-   }
 
    /**
     * Check if the Custom Payment Provider is currently registered in GHL.

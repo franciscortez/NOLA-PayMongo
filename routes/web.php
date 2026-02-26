@@ -47,7 +47,7 @@ Route::middleware(['check.ghl.token'])->group(function () {
 // Checkout — loaded by GHL as paymentsUrl (must allow iFrame embedding)
 Route::middleware([AllowIframeEmbedding::class])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'show']);
-    Route::post('/checkout/create-session', [CheckoutController::class, 'createCheckoutSession'])->name('checkout.createSession');
+    Route::post('/checkout/create-session', [CheckoutController::class, 'createCheckoutSession'])->name('checkout.createSession')->middleware('throttle:checkout');
     Route::get('/checkout/status/{sessionId}', [CheckoutController::class, 'checkStatus'])->name('checkout.status');
     Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
     Route::get('/checkout/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');

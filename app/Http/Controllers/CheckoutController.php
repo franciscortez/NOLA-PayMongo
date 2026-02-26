@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Services\CheckoutService;
 use App\Http\Requests\CheckoutSessionRequest;
 
@@ -42,10 +43,21 @@ class CheckoutController extends Controller
       );
 
       if (!$result['success']) {
+         Log::channel('payments')->warning('Checkout session creation failed', [
+            'error' => $result['error'],
+            'ghl_location_id' => $validated['ghl_location_id'] ?? null,
+         ]);
          return response()->json([
             'error' => $result['error'],
          ], 500);
       }
+
+      Log::channel('payments')->info('Checkout session created', [
+         'checkout_session_id' => $result['checkout_session_id'],
+         'amount' => $validated['amount'] ?? null,
+         'currency' => $validated['currency'] ?? 'PHP',
+         'ghl_location_id' => $validated['ghl_location_id'] ?? null,
+      ]);
 
       return response()->json([
          'checkout_url' => $result['checkout_url'],

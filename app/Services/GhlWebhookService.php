@@ -43,9 +43,9 @@ class GhlWebhookService
          'apiKey' => $this->resolveApiKey($transaction),
       ];
 
-      Log::info('GhlWebhookService: Sending payment.captured to GHL', [
+      Log::channel('payments')->info('GHL webhook payment.captured sent', [
          'ghl_transaction_id' => $transaction->ghl_transaction_id,
-         'chargeId' => $chargeId,
+         'charge_id' => $chargeId,
       ]);
 
       try {
@@ -60,6 +60,10 @@ class GhlWebhookService
          ]);
 
          if (!$response->successful()) {
+            Log::channel('payments')->error('GHL webhook delivery failed', [
+               'ghl_transaction_id' => $transaction->ghl_transaction_id,
+               'status' => $response->status(),
+            ]);
             Log::error('GhlWebhookService: GHL webhook call failed', [
                'status' => $response->status(),
                'body' => $response->body(),
@@ -70,6 +74,10 @@ class GhlWebhookService
 
          return true;
       } catch (\Exception $e) {
+         Log::channel('payments')->error('GHL webhook exception', [
+            'ghl_transaction_id' => $transaction->ghl_transaction_id,
+            'error' => $e->getMessage(),
+         ]);
          Log::error('GhlWebhookService: Exception sending webhook to GHL', [
             'message' => $e->getMessage(),
             'payload' => $payload,

@@ -52,14 +52,13 @@ class VerifyPayMongoSignature
 
         $expectedSignature = hash_hmac('sha256', $signatureString, $webhookSecret);
 
-        // Debug logging for test environments
-        Log::debug('Signature validation debug', [
-            'payload_string' => $signatureString,
-            'computed_hash' => $expectedSignature,
-            'te_header' => $signatureData['te'] ?? null,
-            'li_header' => $signatureData['li'] ?? null,
-            'raw_content' => $payload
-        ]);
+        // Debug logging only when LOG_LEVEL=debug to avoid leaking payload in production
+        if (config('app.debug')) {
+            Log::debug('PayMongo webhook signature validation', [
+                'has_te' => isset($signatureData['te']),
+                'has_li' => isset($signatureData['li']),
+            ]);
+        }
 
         // Check against both test (te) and live (li) signatures found in the header
         $isValid = false;

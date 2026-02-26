@@ -146,13 +146,13 @@
 
 > Hardening the integration for production use.
 
-- [ ] **HTTPS enforcement** — Ensure all endpoints require HTTPS (currently relies on ngrok)
-- [ ] **Rate limiting** — Add rate limits on checkout creation and webhook endpoints
+- [x] **HTTPS enforcement** — Ensure all endpoints require HTTPS (middleware redirects in production; skipped for local/testing).
+- [x] **Rate limiting** — Add rate limits on checkout creation (`throttle:checkout`, 30/min). *Note: Webhooks (GHL and PayMongo) are explicitly excluded from HTTP rate limiting to avoid 429 errors from failing the integrations under load.*
 - [x] Input sanitization — Validate and sanitize all incoming data from GHL and PayMongo
-- [ ] **PayMongo webhook signature verification** — Validate webhook authenticity
+- [x] **PayMongo webhook signature verification** — Validate webhook authenticity
 - [x] Encrypt stored tokens — Encrypt `access_token` and `refresh_token` at rest
-- [ ] **CSRF protection on API routes** — Review CSRF exclusions for webhook endpoints
-- [ ] **Logging & monitoring** — Structured logging for production debugging
+- [x] **CSRF protection on API routes** — CSRF exclusions narrowed to only `checkout/create-session` (GHL iFrame cross-origin POST); API webhooks are stateless and do not use session CSRF.
+- [x] **Logging & monitoring** — Structured logging to `payments` channel (daily log) for checkout, verify, refund, webhooks, and GHL delivery.
 
 ---
 

@@ -17,4 +17,4 @@ Route::post('/webhook/ghl-query', [QueryController::class, 'handle']);
 Route::post('/query', [QueryController::class, 'handle']); // Alias matching marketplace app config
 // PayMongo webhooks — receives payment.paid, payment.failed, payment.refunded, etc.
 Route::post('/webhook/paymongo', [PayMongoWebhookController::class, 'handle'])
-    ->middleware('verify.paymongo.signature');
+    ->middleware(['verify.paymongo.signature']);

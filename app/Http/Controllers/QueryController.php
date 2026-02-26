@@ -25,10 +25,14 @@ class QueryController extends Controller
    public function handle(QueryUrlRequest $request)
    {
       $payload = $request->validated();
-      Log::info('QueryController: received payload', ['payload' => $payload]);
 
       $type = $payload['type'];
       $apiKey = $payload['apiKey'] ?? null;
+
+      Log::channel('payments')->info('GHL query received', [
+         'type' => $type,
+         'charge_id' => $payload['chargeId'] ?? null,
+      ]);
 
       // Determine which PayMongo secret key to use based on the apiKey GHL sends.
       // If the apiKey matches a test key, use test; otherwise use live.
@@ -63,7 +67,12 @@ class QueryController extends Controller
    protected function handleVerify(QueryUrlRequest $request, PayMongoService $service)
    {
       $chargeId = $request->input('chargeId', '');
-      return response()->json($this->ghlQueryService->verifyPayment($chargeId, $service));
+      $result = $this->ghlQueryService->verifyPayment($chargeId, $service);
+      Log::channel('payments')->info('GHL verify result', [
+         'charge_id' => $chargeId,
+         'success' => $result['success'] ?? !($result['failed'] ?? false),
+      ]);
+      return response()->json($result);
    }
 
    /**
@@ -76,7 +85,13 @@ class QueryController extends Controller
    {
       $chargeId = $request->input('chargeId', '');
       $amount = (float) $request->input('amount', 0);
-      return response()->json($this->ghlQueryService->refundPayment($chargeId, $amount, $service));
+      $result = $this->ghlQueryService->refundPayment($chargeId, $amount, $service);
+      Log::channel('payments')->info('GHL refund result', [
+         'charge_id' => $chargeId,
+         'amount' => $amount,
+         'success' => $result['success'] ?? false,
+      ]);
+      return response()->json($result);
    }
 
    /**

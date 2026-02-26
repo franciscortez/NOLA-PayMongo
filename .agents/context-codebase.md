@@ -51,6 +51,7 @@ app/
 │   ├── Middleware/
 │   │   ├── AllowIframeEmbedding.php     — Removes X-Frame-Options for GHL iFrame
 │   │   ├── CheckGhlToken.php            — Auto-refreshes GHL tokens before API calls
+│   │   ├── EnsureHttps.php              — Redirects HTTP to HTTPS in production
 │   │   └── VerifyPayMongoSignature.php  — Validates webhook authenticity
 ├── Models/
 │   ├── LocationToken.php               — GHL OAuth tokens per location
@@ -75,8 +76,9 @@ resources/views/
 └── provider/
     └── config.blade.php                — Provider setup UI (connect/disconnect)
 database/migrations/
-├── create_location_tokens_table.php    — GHL location OAuth tokens
-└── create_transactions_table.php       — Payment transactions
+├── 2026_02_23_015622_create_location_tokens_table.php — GHL location OAuth tokens
+├── 2026_02_23_043648_create_transactions_table.php — Payment transactions
+└── 2026_02_25_030914_create_webhook_logs_table.php — PayMongo webhook audit log
 ```
 
 ---
@@ -278,3 +280,4 @@ PAYMONGO_WEBHOOK_SECRET=whsk_xxx
 2. **Popup blocker**: If browser blocks popup, falls back to redirect
 3. **`list_payment_methods` and `charge_payment`**: Placeholder only — not yet implemented (card vaulting)
 4. **Provider config uses `.env` keys**: PayMongo keys are pushed from server env, not user-input
+5. **Security**: HTTPS enforced in non-local/testing via `EnsureHttps` middleware; rate limits on checkout (30/min) and webhooks (120/min); CSRF excluded only for `checkout/create-session`; PayMongo signature verified; structured logs in `storage/logs/payments-YYYY-MM-DD.log`

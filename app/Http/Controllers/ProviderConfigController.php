@@ -73,8 +73,16 @@ class ProviderConfigController extends Controller
         $providerResult = $this->providerConfigService->registerCustomProvider($locationId, $locationToken->access_token);
 
         if (!$providerResult['success']) {
+            $details = $providerResult['details'] ?? [];
+            $apiMessage = is_array($details) ? ($details['message'] ?? $details['error'] ?? '') : '';
+
+            $errorMessage = 'Failed to register the Custom Provider in GHL.';
+            if ($apiMessage) {
+                $errorMessage .= ' Reason: ' . $apiMessage;
+            }
+
             return back()->with([
-                'error' => 'Failed to register the Custom Provider in GHL.',
+                'error' => $errorMessage,
                 'error_details' => $providerResult['details'] ?? null
             ]);
         }
@@ -93,8 +101,16 @@ class ProviderConfigController extends Controller
         );
 
         if (!$configResult['success']) {
+            $details = $configResult['details'] ?? [];
+            $apiMessage = is_array($details) ? ($details['message'] ?? $details['error'] ?? '') : '';
+
+            $errorMessage = 'Failed to push the PayMongo keys to the Connect Config API in GHL.';
+            if ($apiMessage) {
+                $errorMessage .= ' Reason: ' . $apiMessage;
+            }
+
             return back()->with([
-                'error' => 'Failed to push the PayMongo Pay keys to the Connect Config API in GHL.',
+                'error' => $errorMessage,
                 'error_details' => $configResult['details'] ?? null
             ]);
         }

@@ -44,7 +44,7 @@
 - [x] Fetch existing provider config from GHL — Use `GET /payments/custom-provider/provider` to check registration state.
 - [x] Provider config validation — Verify API keys are valid before pushing to GHL.
 - [x] Support central PayMongo keys — Uses environment variables since this is a private integration.
-- [ ] **Provider config error detail display** — Show GHL API error details on failure, not just generic messages
+- [x] **Provider config error detail display** — Show GHL API error details on failure, not just generic messages
 
 ---
 
@@ -110,7 +110,6 @@
 - [x] PayMongo webhook signature verification — Validates `X-Paymongo-Signature` header against webhook secret to prevent spoofing
 - [x] Webhook retry/idempotency — Prevent duplicate processing of the same webhook event
 - [x] Webhook event logging table — Store raw webhook payloads for debugging/audit trail
-- [ ] **Failed GHL webhook notification retry** — Queue and retry if GHL webhook delivery fails
 
 ### [x] 1️⃣ Priority: Transaction Expiration Handling
 
@@ -130,24 +129,12 @@
 
 ---
 
-## 8. 📊 Subscriptions & Recurring Payments
-
-> Support for recurring billing through GHL.
-
-- [ ] **Subscription creation** — Handle GHL subscription initiation
-- [ ] **Recurring charge processing** — Charge saved payment methods on schedule
-- [ ] **Subscription status tracking** — Track active/paused/cancelled subscriptions
-- [ ] **Subscription webhook handling** — Handle GHL subscription lifecycle events
-- [ ] **PayMongo recurring payments** — Integrate with PayMongo's recurring payment features if available
-
----
-
 ## 9. 🛡️ Security & Reliability [x]
 
 > Hardening the integration for production use.
 
 - [x] **HTTPS enforcement** — Ensure all endpoints require HTTPS (middleware redirects in production; skipped for local/testing).
-- [x] **Rate limiting** — Add rate limits on checkout creation (`throttle:checkout`, 30/min). *Note: Webhooks (GHL and PayMongo) are explicitly excluded from HTTP rate limiting to avoid 429 errors from failing the integrations under load.*
+- [x] **Rate limiting** — Add rate limits on checkout creation (`throttle:checkout`, 30/min). _Note: Webhooks (GHL and PayMongo) are explicitly excluded from HTTP rate limiting to avoid 429 errors from failing the integrations under load._
 - [x] Input sanitization — Validate and sanitize all incoming data from GHL and PayMongo
 - [x] **PayMongo webhook signature verification** — Validate webhook authenticity
 - [x] Encrypt stored tokens — Encrypt `access_token` and `refresh_token` at rest
@@ -163,7 +150,6 @@
 - [ ] **Production deployment guide** — Document Google Cloud Run requirements, env setup, and deployment steps
 - [ ] **Deploy to Google Cloud Run** — Containerize the app and deploy serverless via GCP
 - [ ] **Cloud SQL Setup** — Set up managed MySQL for transaction data
-- [ ] **Queue worker setup** — Configure Laravel queues for webhook processing
 - [x] Health check endpoint — Dedicated `/api/health` checking DB status
 - [x] Provider Diagnose endpoint — Extracted to `/api/provider/diagnose` to validate GHL config state
 - [ ] **CI/CD pipeline** — Automated testing and deployment

@@ -1,30 +1,28 @@
 # Next Priorities
 
-Based on the overall `task-progress.md`, here are the immediate next priorities to work on:
+Based on the overall `task-progress.md` and the `ghl-flow.md` requirements, here are the immediate next priorities to complete the standard payment provider integration for production:
 
-### [ ] 1️⃣ Priority: Queue System & Webhook Retries
+### [ ] 1️⃣ Priority: Error Handling & Edge Cases
 
-> Ensure reliable delivery of webhooks to GHL by moving to a queue-based architecture.
+> Improve user experience and edge-case resilience before launch.
 
-- [ ] **Queue worker setup** — Configure Laravel queues for background jobs.
-- [ ] **Failed GHL webhook notification retry** — Move GHL webhook logic to an async Job with automatic retries if GHL webhook delivery fails.
+- [x] **Provider config error detail display** — Show detailed GHL API error messages in the UI when users fail to connect their keys.
+- [ ] **Currency support beyond PHP** — Ensure the integration safely rejects or handles GHL locations using USD/other currencies since PayMongo primarily supports PHP.
+- [ ] **Checkout timeout configuration** — Make the 30-second checkout handshake timeout duration configurable via `.env`.
 
-### [x] 2️⃣ Priority: Security Hardening
+### [ ] 2️⃣ Priority: Preparation for Production (GCP & Cloud Run)
 
-> Continue hardening the integration for production use.
+> Deployment pipeline and environment configuration.
 
-- [x] **HTTPS enforcement** — Ensure all endpoints require HTTPS (middleware in production; skipped local/testing).
-- [x] **Rate limiting** — Rate limits on checkout only (Webhooks excluded to avoid 429s causing integration failure).
-- [x] **PayMongo webhook signature verification** — Validate webhook authenticity (already implemented; debug logging gated to APP_DEBUG).
-- [x] **CSRF protection on API routes** — Exclusions narrowed to `checkout/create-session` only.
-- [x] **Logging & monitoring** — Structured logging to `payments` channel.
+- [ ] **Dockerization** — Create a `Dockerfile` optimized for Laravel 12 on Google Cloud Run.
 
-## 8. 📊 Subscriptions & Recurring Payments
+### [ ] 3️⃣ Priority: Documentation & Testing
 
-> Support for recurring billing through GHL.
+> Project documentation and test coverage.
 
-- [ ] **Subscription creation** — Handle GHL subscription initiation
-- [ ] **Recurring charge processing** — Charge saved payment methods on schedule
-- [ ] **Subscription status tracking** — Track active/paused/cancelled subscriptions
-- [ ] **Subscription webhook handling** — Handle GHL subscription lifecycle events
-- [ ] **PayMongo recurring payments** — Integrate with PayMongo's recurring payment features if available
+- [ ] **README.md** — Setup instructions, environment requirements, architecture overview
+- [ ] **API documentation** — Document all endpoints (Postman collection or OpenAPI spec)
+- [ ] **Unit tests** — Test services (PayMongoService, GhlService, ProviderConfigService)
+- [ ] **Integration tests** — End-to-end test for OAuth → checkout → payment → verify flow
+- [ ] **Webhook testing** — Mock PayMongo webhook events for automated testing
+- [ ] **GHL sandbox testing guide** — Step-by-step guide for testing the full flow on GHL sandbox

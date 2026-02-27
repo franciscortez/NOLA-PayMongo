@@ -21,7 +21,7 @@ class CheckoutService
    {
       $amount = $data['amount'];
       $currency = strtoupper($data['currency']);
-      $description = $data['description'];
+      $description = $data['description'] ?? '';
       $name = $data['name'] ?? null;
       $email = $data['email'] ?? null;
       $phone = $data['phone'] ?? null;
@@ -39,7 +39,18 @@ class CheckoutService
          'order_id' => $orderId,
       ]);
 
-      $paymentMethodTypes = ['qrph', 'card', 'gcash', 'grab_pay', 'paymaya'];
+      // Determine supported payment methods based on currency
+      // PayMongo e-wallets and QRPH only support PHP. USD only supports cards.
+      if ($currency === 'PHP') {
+         $paymentMethodTypes = ['qrph', 'card', 'gcash', 'grab_pay', 'paymaya'];
+      } elseif ($currency === 'USD') {
+         $paymentMethodTypes = ['card'];
+      } else {
+         return [
+            'success' => false,
+            'error' => "The currency '{$currency}' is not supported. Use PHP or USD.",
+         ];
+      }
 
       // Build line items from GHL product details or fallback to description
       $lineItems = [];

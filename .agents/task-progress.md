@@ -66,8 +66,7 @@
 - [x] Inline payment form — Embed PayMongo Elements directly in iFrame
 - [x] Handle expired checkout sessions — Auto-create new session if previous one expired
 - [x] Customer billing address — Pass full address from GHL contact to PayMongo
-- [ ] **Currency support beyond PHP** — Handle GHL locations using USD or other currencies
-- [ ] **Checkout timeout configuration** — Make the 30s handshake timeout configurable
+- [x] **Currency support beyond PHP** — Handle GHL locations using USD or other currencies (USD limited to cards; others rejected)
 
 ---
 
@@ -147,13 +146,10 @@
 
 > Production readiness and deployment pipeline.
 
-- [ ] **Production deployment guide** — Document Google Cloud Run requirements, env setup, and deployment steps
-- [ ] **Deploy to Google Cloud Run** — Containerize the app and deploy serverless via GCP
+- [x] **Production deployment guide** — Document Google Cloud Run requirements, env setup, and deployment steps
+- [x] **Dockerization** — Create a `Dockerfile` optimized for Laravel 12 on Google Cloud Run.
 - [ ] **Cloud SQL Setup** — Set up managed MySQL for transaction data
 - [x] Health check endpoint — Dedicated `/api/health` checking DB status
-- [x] Provider Diagnose endpoint — Extracted to `/api/provider/diagnose` to validate GHL config state
-- [ ] **CI/CD pipeline** — Automated testing and deployment
-- [ ] **Environment-specific configs** — Separate configs for staging and production
 
 ---
 
@@ -161,9 +157,9 @@
 
 > Project documentation and test coverage.
 
-- [ ] **README.md** — Setup instructions, environment requirements, architecture overview
-- [ ] **API documentation** — Document all endpoints (Postman collection or OpenAPI spec)
-- [ ] **Unit tests** — Test services (PayMongoService, GhlService, ProviderConfigService)
-- [ ] **Integration tests** — End-to-end test for OAuth → checkout → payment → verify flow
-- [ ] **Webhook testing** — Mock PayMongo webhook events for automated testing
-- [ ] **GHL sandbox testing guide** — Step-by-step guide for testing the full flow on GHL sandbox
+- [x] **README.md** — Setup instructions, environment requirements, architecture overview
+- [x] **API documentation** — Document all endpoints (Postman collection or OpenAPI spec)
+- [x] **Unit tests** — Test services (PayMongoService, GhlService, ProviderConfigService)
+- [x] **Integration tests** — End-to-end test for OAuth → checkout → payment → verify flow
+- [x] **Webhook testing** — Mock PayMongo webhook events for automated testing
+- [x] **GHL sandbox testing guide** — Step-by-step guide for testing the full flow on GHL sandbox

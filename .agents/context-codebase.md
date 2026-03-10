@@ -266,15 +266,41 @@ PAYMONGO_WEBHOOK_SECRET=whsk_xxx
 ### Docker & Google Cloud Platform (GCP) Deployment
 
 - **Hosting Target**: Google Cloud Run (Fully managed serverless container platform)
-- **Deployment Flow**: Source Code → Docker Image → Google Artifact Registry → Google Cloud Run
-- **Docker Documentation**:
-    - [Dockerize a Laravel Application](https://docs.docker.com/language/php/)
-    - [Dockerfile Reference](https://docs.docker.com/reference/dockerfile/)
-- **GCP Documentation**:
-    - [Google Cloud Run Documentation](https://cloud.google.com/run/docs)
-    - [Deploying PHP apps to Cloud Run](https://cloud.google.com/run/docs/quickstarts/build-and-deploy/deploy-php-service)
-    - [Connecting Cloud Run to Cloud SQL (MySQL)](https://cloud.google.com/sql/docs/mysql/connect-run)
-    - [Secret Manager (for .env keys)](https://cloud.google.com/secret-manager/docs/overview)
+- **Database**: Google Cloud SQL (MySQL 8.0, connected via Unix sockets)
+- **Deployment Flow**: Source Code → Google Cloud Build → Google Artifact Registry → Google Cloud Run
+- **Live URLs:**
+    - **Service URL:** `https://paymongo-app-205396437939.us-central1.run.app`
+    - **GCP Project ID:** `nola-paymongo`
+    - **Region:** `us-central1`
+
+**How to Redeploy After Code Changes:**
+If you make any changes to the code (PHP, JS, CSS, or Dockerfile), you need to perform a two-step "Build and Release" process to update the live site:
+
+```bash
+# STEP 1: Build & Upload the New Image (The "Build" phase)
+# This command zips your code, builds the container in the cloud, and saves it to Artifact Registry.
+gcloud builds submit --tag us-central1-docker.pkg.dev/nola-paymongo/paymongo-repo/paymongo-app --project=nola-paymongo
+
+# STEP 2: Release to Cloud Run (The "Deploy" phase)
+# This command tells Cloud Run to take the image we just built and swap out the old version of your site for the new one.
+gcloud run deploy paymongo-app \
+  --image us-central1-docker.pkg.dev/nola-paymongo/paymongo-repo/paymongo-app \
+  --region us-central1 \
+  --project=nola-paymongo
+```
+
+**How to Update Production Environment Variables:**
+If you only need to change a setting (like an API Key or Webhook Secret) without changing code, you don't need to rebuild. Just update the service configuration:
+
+```bash
+# Example: Updating the PayMongo Live Webhook Secret
+gcloud run services update paymongo-app \
+  --region us-central1 \
+  --project nola-paymongo \
+  --update-env-vars="PAYMONGO_WEBHOOK_SECRET=whsk_new_secret_here"
+```
+
+_Note: Updating an environment variable alone will also trigger a new revision (redeploy) automatically._
 
 ---
 

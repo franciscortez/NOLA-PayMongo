@@ -61,12 +61,16 @@ class ProviderConfigController extends Controller
         $liveKey = config('services.paymongo.live_secret_key');
         $testKey = config('services.paymongo.test_secret_key');
 
-        if (!$this->payMongoService->validateKey($testKey)) {
-            return back()->with('error', 'The PayMongo TEST Secret Key is invalid. Please check your .env file.');
-        }
+        $isProduction = config('services.paymongo.is_production');
 
-        if (config('services.paymongo.is_production') && !$this->payMongoService->validateKey($liveKey)) {
-            return back()->with('error', 'The PayMongo LIVE Secret Key is invalid. Please check your .env file.');
+        if ($isProduction) {
+            if (!$this->payMongoService->validateKey($liveKey)) {
+                return back()->with('error', 'The PayMongo LIVE Secret Key is missing or invalid. Please check your environment variables.');
+            }
+        } else {
+            if (!$this->payMongoService->validateKey($testKey)) {
+                return back()->with('error', 'The PayMongo TEST Secret Key is missing or invalid. Please check your environment variables.');
+            }
         }
 
         // 1. Register the generic Custom Provider settings

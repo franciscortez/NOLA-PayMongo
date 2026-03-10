@@ -1,152 +1,145 @@
 # Production Deployment Guide: Google Cloud Run
 
-This guide will walk you through the process of deploying the NOLA PayMongo × GoHighLevel Laravel application to **Google Cloud Run** using the provided `Dockerfile`.
+This guide explains how we successfully deployed the NOLA PayMongo × GoHighLevel Laravel application to **Google Cloud Run** using the provided `Dockerfile`.
 
 ## 1. Prerequisites
 
-Before starting, ensure you have the following installed and configured on your local machine:
+Ensure you have the following installed and configured on your local machine:
 
-1.  **Google Cloud SDK (`gcloud` CLI)**: [Install Guide](https://cloud.google.com/sdk/docs/install)
-2.  **Docker CLI**: [Install Guide](https://docs.docker.com/get-docker/)
-3.  A **Google Cloud Project** with billing enabled.
-
-Inside your Google Cloud Project, enable the following APIs:
-
-- Cloud Run API
-- Artifact Registry API
-- Cloud SQL Admin API (if using Cloud SQL)
-- Secret Manager API (recommended for storing `.env`)
-
----
-
-## 2. Environment Variables (.env)
-
-Cloud Run instances are stateless. Instead of pushing your `.env` file to the container, you provide environment variables to the Cloud Run service during deployment.
-
-**Important Production Variables:**
-
-```env
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://your-cloud-run-domain.a.run.app
-LOG_CHANNEL=stderr # CRITICAL: Cloud Run logs to stderr
-
-# Database (See Step 3)
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=your_db_name
-DB_USERNAME=your_db_user
-DB_PASSWORD=your_db_password
-
-# The rest of your PayMongo and GHL variables...
-```
-
-_Tip: For maximum security, store sensitive values (like API keys and DB passwords) in **Google Secret Manager** and reference them in your Cloud Run deployment._
-
----
-
-## 3. Database: Google Cloud SQL Connection
-
-If you are using **Google Cloud SQL (MySQL)**, Cloud Run connects via a built-in Unix socket, not a public IP address.
-
-Your `.env` database configuration must look like this:
-
-```env
-DB_CONNECTION=mysql
-DB_DATABASE=your_db_name
-DB_USERNAME=your_db_user
-DB_PASSWORD=your_db_password
-DB_SOCKET=/cloudsql/YOUR_PROJECT_ID:REGION:YOUR_INSTANCE_NAME
-```
-
-_(Leave `DB_HOST` and `DB_PORT` empty when using the Cloud SQL Unix socket)._
-
----
-
-## 4. Building and Pushing the Docker Image
-
-We use **Google Artifact Registry** to store our Docker images before deploying them to Cloud Run.
-
-### Step 4.1: Create an Artifact Registry Repository
-
-```bash
-gcloud artifacts repositories create paymongo-ghl-repo \
-    --repository-format=docker \
-    --location=us-central1 \
-    --description="Docker repository for PayMongo GHL App"
-```
-
-### Step 4.2: Authenticate Docker
-
-```bash
-gcloud auth configure-docker us-central1-docker.pkg.dev
-```
-
-### Step 4.3: Build the Image
-
-Run this from the root of your Laravel project (where the `Dockerfile` is located):
-
-```bash
-# Define your image name
-export IMAGE_NAME="us-central1-docker.pkg.dev/YOUR_PROJECT_ID/paymongo-ghl-repo/webapp"
-
-# Build the image using your local Docker daemon
-docker build -t $IMAGE_NAME .
-```
-
-### Step 4.4: Push the Image
-
-```bash
-docker push $IMAGE_NAME
-```
-
----
-
-## 5. Deploying to Cloud Run
-
-Now that the image is in Artifact Registry, deploy it to Cloud Run.
-
-```bash
-gcloud run deploy paymongo-ghl-service \
-    --image=$IMAGE_NAME \
-    --region=us-central1 \
-    --allow-unauthenticated \
-    --port=8080 \
-    --set-env-vars="APP_ENV=production,APP_DEBUG=false,LOG_CHANNEL=stderr" \
-    --add-cloudsql-instances="YOUR_PROJECT_ID:REGION:YOUR_INSTANCE_NAME"
-```
-
-_(Note: You can pass all your PayMongo and GHL keys via `--set-env-vars` or reference secrets exposed by Secret Manager)._
-
-### Deployment Flags Explained:
-
-- `--allow-unauthenticated`: Makes the endpoint publicly accessible (required for webhooks and the iFrame).
-- `--port=8080`: Tells Cloud Run to send traffic to port 8080 (which our Dockerfile's Apache server is listening on).
-- `--add-cloudsql-instances`: **Crucial** flag that mounts the Cloud SQL Unix socket so Laravel can connect via `DB_SOCKET`.
-
----
-
-## 6. Post-Deployment Steps
-
-1.  **Run Database Migrations:**
-    Because Cloud Run instances are ephemeral, it's best to run migrations via a temporary Cloud Run Job or by connecting to the Cloud SQL instance from your local machine using the Cloud SQL Auth Proxy.
-
-    _Using a Cloud Run Job (Recommended):_
+1. **Google Cloud SDK (`gcloud` CLI)**: [Install Guide](https://cloud.google.com/sdk/docs/install)
+2. Authenticate and set your active project:
 
     ```bash
-    gcloud run jobs create migrate-db \
-      --image $IMAGE_NAME \
-      --command "php" \
-      --args "artisan,migrate,--force" \
-      --add-cloudsql-instances="YOUR_PROJECT_ID:REGION:YOUR_INSTANCE_NAME" \
-      --set-env-vars="DB_SOCKET=...,DB_DATABASE=...,etc..."
-
-    gcloud run jobs execute migrate-db --wait
+    gcloud auth login
+    gcloud config set project your-project-id
     ```
 
-2.  **Update GHL Custom Provider Configuration:**
-    Once Cloud Run provides your live `https://` domain URL, update your Marketplace App in GoHighLevel to point the `queryUrl` and `paymentsUrl` to the new production domain.
+3. **Enable GCP APIs**:
+    ```bash
+    gcloud services enable \
+      run.googleapis.com \
+      sqladmin.googleapis.com \
+      artifactregistry.googleapis.com \
+      cloudbuild.googleapis.com
+    ```
 
-3.  **Update PayMongo Webhooks:**
-    Go to the PayMongo Dashboard and register your new webhook endpoint (e.g., `https://your-cloud-run-domain.a.run.app/api/webhook/paymongo`). Update your `.env` with the new webhook secret key perfectly.
+---
+
+## 2. Infrastructure Setup
+
+### Create Artifact Registry
+
+```bash
+gcloud artifacts repositories create paymongo-repo \
+  --repository-format=docker \
+  --location=us-central1 \
+  --description="PayMongo docker repository"
+```
+
+### Create Cloud SQL Database
+
+```bash
+# Create the MySQL 8 instance
+gcloud sql instances create paymongo-db --database-version=MYSQL_8_0 --tier=db-f1-micro --region=us-central1
+
+# Create the database inside the instance
+gcloud sql databases create paymongo --instance=paymongo-db
+
+# Set a secure root password
+gcloud sql users set-password root --host=% --instance=paymongo-db --password='YOUR_SUPER_SECURE_PASSWORD'
+```
+
+---
+
+## 3. Build & Deploy Image
+
+Submit the codebase to Cloud Build to build and push the docker image automatically:
+
+```bash
+gcloud builds submit --tag us-central1-docker.pkg.dev/your-project-id/paymongo-repo/paymongo-app
+```
+
+Then, deploy the image immediately to Cloud Run attaching the SQL database via UNIX sockets:
+
+```bash
+gcloud run deploy paymongo-app \
+  --image us-central1-docker.pkg.dev/your-project-id/paymongo-repo/paymongo-app \
+  --region us-central1 \
+  --allow-unauthenticated \
+  --add-cloudsql-instances your-project-id:us-central1:paymongo-db \
+  --set-env-vars="DB_CONNECTION=mysql,DB_SOCKET=/cloudsql/your-project-id:us-central1:paymongo-db,DB_DATABASE=paymongo,DB_USERNAME=root,DB_PASSWORD=YOUR_SUPER_SECURE_PASSWORD" \
+  --set-env-vars="APP_ENV=production,APP_DEBUG=true,APP_KEY=YOUR_APP_KEY" \
+  # ... attach the rest of your GHL and PayMongo variables here ...
+```
+
+_Note: Store highly sensitive variables in Secret Manager rather than plain environment variables in production long-term._
+
+---
+
+## 4. Retrieve APP_URL & Run Migrations
+
+Once your service is deployed, retrieve your live domain URL from Cloud Run (e.g. `https://paymongo-app-1234.us-central1.run.app`) and dynamically update the configuration:
+
+```bash
+gcloud run services update paymongo-app \
+  --region us-central1 \
+  --update-env-vars="APP_URL=https://paymongo-app-1234.us-central1.run.app"
+```
+
+Then run the database migrations via a Google Cloud Run Job:
+
+```bash
+# Create the Job
+gcloud run jobs create migrate-db \
+  --image us-central1-docker.pkg.dev/your-project-id/paymongo-repo/paymongo-app \
+  --command="php" \
+  --args="artisan,migrate,--force" \
+  --set-cloudsql-instances your-project-id:us-central1:paymongo-db \
+  --set-env-vars="DB_CONNECTION=mysql,DB_SOCKET=/cloudsql/your-project-id:us-central1:paymongo-db,DB_DATABASE=paymongo,DB_USERNAME=root,DB_PASSWORD=YOUR_SUPER_SECURE_PASSWORD" \
+  --region us-central1
+
+# Execute the Job
+gcloud run jobs execute migrate-db --region us-central1 --wait
+```
+
+---
+
+## 5. Webhook Configurations
+
+Update your external integration endpoints using your new live `APP_URL`.
+
+**1. Register PayMongo Live Webhooks**
+Use the included command line configuration tool:
+
+```bash
+# Register the webhook to run directly against the live URL
+COMPOSER_ALLOW_SUPERUSER=1 APP_URL=https://paymongo-app-1234.us-central1.run.app \
+php artisan paymongo:register-webhook
+```
+
+This generates a new `whsk_XXXX` key. Add this secret to your Cloud Run environment variable as `PAYMONGO_WEBHOOK_SECRET` and into your local `.env`.
+
+**2. Update GoHighLevel App Redirect URLs**
+In GoHighLevel Marketplace settings, update the redirect/oauth callback path to:
+`https://paymongo-app-1234.us-central1.run.app/oauth/callback`
+
+---
+
+## Troubleshooting Known Issues
+
+### `ERR_TOO_MANY_ACCEPT_CH_RESTARTS` (Infinite URL Redirects)
+
+**Symptom:** Opening the page results in an infinite 301 loop.
+
+**Cause:** Google Cloud Run terminates SSL upstream and proxies the traffic to the container using `HTTP`. Since Laravel only sees the `HTTP` incoming connection, any manually written `EnsureHttps` middleware will perpetually redirect to `HTTPS`.
+
+**Fix:** We removed the custom `EnsureHttps` middleware inside `bootstrap/app.php` and modified `app/Providers/AppServiceProvider.php` to dynamically force the scheme instead:
+
+```php
+public function boot(): void
+{
+    if ($this->app->environment('production')) {
+        URL::forceScheme('https');
+    }
+}
+```

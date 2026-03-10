@@ -184,8 +184,12 @@ class PayMongoService
    /**
     * Validate a PayMongo Secret Key by making a lightweight API call.
     */
-   public function validateKey(string $secretKey): bool
+   public function validateKey(?string $secretKey): bool
    {
+      if (empty($secretKey)) {
+         return false;
+      }
+
       try {
          $response = Http::withBasicAuth($secretKey, '')
             ->get("{$this->baseUrl}/webhooks");

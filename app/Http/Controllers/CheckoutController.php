@@ -43,7 +43,7 @@ class CheckoutController extends Controller
       );
 
       if (!$result['success']) {
-         Log::channel('payments')->warning('Checkout session creation failed', [
+         Log::warning('Checkout session creation failed', [
             'error' => $result['error'],
             'ghl_location_id' => $validated['ghl_location_id'] ?? null,
          ]);
@@ -52,7 +52,7 @@ class CheckoutController extends Controller
          ], 500);
       }
 
-      Log::channel('payments')->info('Checkout session created', [
+      Log::info('Checkout session created', [
          'checkout_session_id' => $result['checkout_session_id'],
          'amount' => $validated['amount'] ?? null,
          'currency' => $validated['currency'] ?? 'PHP',

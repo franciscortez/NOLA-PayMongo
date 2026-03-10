@@ -20,10 +20,11 @@ The system operates as a man-in-the-middle between GoHighLevel and PayMongo:
 
 1.  **OAuth Connection:** GHL Sub-accounts connect to the App via OAuth. The app stores an `access_token` and `refresh_token` per location.
 2.  **Provider Configuration:** Valid PayMongo API keys (Live & Test) are pushed to GHL's Connect Config API.
-3.  **iFrame Checkout:** When a customer buys something on a GHL funnel, GHL loads this app's `/checkout` view inside an iFrame.
+3.  **iFrame Checkout:** When a customer buys something on a GHL funnel or pays an Invoice, GHL loads this app's `/checkout` view inside an iFrame.
 4.  **Payment Processing:** The app generates a PayMongo Checkout Session and opens it in a pop-up window so the customer can pay (via Card, GCash, GrabPay, etc.).
 5.  **Status Sync:** The app polls the payment status and fires success/error callbacks to the GHL iFrame.
-6.  **Webhooks:** PayMongo sends asynchronous webhooks (`checkout_session.payment.paid`) to this app, which then forwards them to GHL as `payment.captured`.
+6.  **Webhooks:** PayMongo sends asynchronous webhooks (`checkout_session.payment.paid`) to this app, which then forwards them to GHL as `payment.captured`. For invoices, it uses the `ghl_invoice_id` as the reference.
+7.  **Refunds:** Refunds initiated in GHL are processed via PayMongo. The app ensures status persistence by verifying against its internal database and forwarding refund webhooks back to GHL.
 
 ---
 
@@ -168,6 +169,7 @@ AJAX endpoint called by the checkout iFrame to generate a PayMongo checkout sess
     - `name` (string, optional)
     - `email` (string, optional)
     - `location_id` (string)
+    - `invoice_id` (string, optional) — Used for GHL Invoice payments
 - **Returns**: `{ "checkout_url": "...", "checkout_session_id": "..." }`
 
 #### `GET /checkout/status/{sessionId}`
@@ -184,9 +186,9 @@ GHL's `queryUrl` endpoint used for server-side verification and manual actions.
 
 - **Body Params**:
     - `type`: "verify" | "refund"
-    - `transactionId` (string)
+    - `transactionId` (string) — Maps to GHL Transaction ID or Invoice ID
     - `chargeId` (string, optional)
-    - `amount` (integer, required for refund)
+    - `amount` (float, required for refund)
 - **Returns**: `{ "success": true/false, ... }`
 
 #### `POST /api/webhook/paymongo`

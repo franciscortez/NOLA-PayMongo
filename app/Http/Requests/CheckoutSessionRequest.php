@@ -3,6 +3,9 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutSessionRequest extends FormRequest
 {
@@ -19,8 +22,19 @@ class CheckoutSessionRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
+        $data = $this->all();
+
+        // If product details are present but missing price, default to total amount
+        if (isset($data['product_details']) && is_array($data['product_details'])) {
+            foreach ($data['product_details'] as &$product) {
+                if (!isset($product['price']) && isset($data['amount'])) {
+                    $product['price'] = $data['amount'];
+                }
+            }
+        }
+
         // Recursively strip HTML tags from string inputs to prevent XSS.
-        $this->merge($this->sanitizeData($this->all()));
+        $this->merge($this->sanitizeData($data));
     }
 
     private function sanitizeData(array $data)
@@ -65,7 +79,24 @@ class CheckoutSessionRequest extends FormRequest
             'is_live_mode' => 'nullable|boolean',
             'transaction_id' => 'nullable|string|max:255',
             'order_id' => 'nullable|string|max:255',
+            'invoice_id' => 'nullable|string|max:255',
             'location_id' => 'nullable|string|max:255',
         ];
+    }
+
+    /**
+     * Handle a failed validation attempt.
+     */
+    protected function failedValidation(Validator $validator)
+    {
+        Log::error('CheckoutSessionRequest validation failed', [
+            'errors' => $validator->errors()->toArray(),
+            'payload' => $this->all(),
+        ]);
+
+        throw new HttpResponseException(response()->json([
+            'error' => 'Validation error',
+            'details' => $validator->errors(),
+        ], 422));
     }
 }

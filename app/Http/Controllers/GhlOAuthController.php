@@ -25,9 +25,9 @@ class GhlOAuthController extends Controller
             ]);
         }
 
-        // Validate state parameter to prevent CSRF attacks
+        // Validate state parameter to prevent CSRF attacks if initiated from our home page
         $savedState = $request->session()->pull('oauth_state');
-        if (!$savedState || $state !== $savedState) {
+        if ($savedState && $state !== $savedState) {
             return view('oauth.error', [
                 'error' => 'Invalid state parameter. Authentication failed.',
             ]);

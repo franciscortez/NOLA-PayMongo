@@ -2,12 +2,20 @@
 
 Based on the overall `task-progress.md` and the `ghl-flow.md` requirements, here are the immediate next priorities to complete the standard payment provider integration for production:
 
-### [ ] 1️⃣ Priority: Error Handling & Edge Cases
+### [x] 1️⃣ Priority: Invoice Payments
 
-> Improve user experience and edge-case resilience before launch.
+> Handle payments for GHL Invoices via PayMongo.
 
-- [x] **Provider config error detail display** — Show detailed GHL API error messages in the UI when users fail to connect their keys.
-- [x] **Currency support beyond PHP** — Ensure the integration safely rejects or handles GHL locations using USD/other currencies since PayMongo primarily supports PHP.
+**Prerequisites (GHL Marketplace Setup):**
+
+- [x] Update App OAuth scopes to include `invoices.readonly` and `invoices.write`
+
+**Development Tasks:**
+
+- [x] Investigate if invoices use the same `paymentsUrl` checkout flow or require separate API logic
+- [x] Map GHL Invoice payload to PayMongo Checkout Session
+
+### [ ] 2️⃣ Priority: Error Handling & Edge Cases
 
 ### [ ] 2️⃣ Priority: Preparation for Production (GCP & Cloud Run)
 

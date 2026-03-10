@@ -121,6 +121,25 @@
             }
          }
 
+         // Invoices structure
+         if (data.invoice && typeof data.invoice === 'object') {
+            const amount = data.invoice.amountDue || data.amount || 0;
+            let currency = 'PHP';
+            if (data.currencyOptions && Array.isArray(data.currencyOptions) && data.currencyOptions[0]) {
+               currency = data.currencyOptions[0].currency || 'PHP';
+            }
+            paymentData = {
+               ...data,
+               amount: amount,
+               currency: currency,
+               contact: data.contact || {},
+               locationId: data.locationId || (data.invoice && data.invoice.locationId) || '',
+               invoiceId: data.invoiceId || (data.invoice && data.invoice._id) || ''
+            };
+            createCheckoutSession(paymentData);
+            return;
+         }
+
          // Fallbacks
          if (data.amount !== undefined && data.currency !== undefined && !paymentData) {
             paymentData = data;
@@ -158,8 +177,21 @@
             let description = data.description || 'Payment';
             let validProductDetails = [];
             if (data.productDetails && Array.isArray(data.productDetails)) {
-               validProductDetails = data.productDetails.filter(p => p && (p.name || typeof p.price !== 'undefined') && Object.keys(p).length > 0);
-               if (validProductDetails.length > 0) description = validProductDetails.map(p => p.name || 'Product').join(', ');
+               validProductDetails = data.productDetails.map(p => {
+                  // Normalize GHL's nested price structure if invoice
+                  let price = p.price;
+                  if (price === undefined && p.prices && Array.isArray(p.prices) && p.prices.length > 0) {
+                     price = p.prices[0].amount;
+                  }
+                  return {
+                     ...p,
+                     price: price
+                  };
+               }).filter(p => (p.name || typeof p.price !== 'undefined') && Object.keys(p).length > 0);
+
+               if (validProductDetails.length > 0) {
+                  description = validProductDetails.map(p => p.name || 'Product').join(', ');
+               }
             }
 
             let address = null;
@@ -191,6 +223,7 @@
                   address: address,
                   transaction_id: data.transactionId || '',
                   order_id: data.orderId || '',
+                  invoice_id: data.invoiceId || '',
                   location_id: data.locationId || '',
                   publishable_key: data.publishableKey || '',
                   product_details: validProductDetails

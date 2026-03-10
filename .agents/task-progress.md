@@ -36,6 +36,20 @@
 - [x] Delete provider from GHL
 - [x] Provider config UI (`/provider/config`)
 
+### [x] 1️⃣ Priority: Invoice Payments
+
+> Handle payments for GHL Invoices via PayMongo.
+
+**Prerequisites (GHL Marketplace Setup):**
+
+- [x] Update App OAuth scopes to include `invoices.readonly` and `invoices.write`
+
+**Development Tasks:**
+
+- [x] Investigate if invoices use the same `paymentsUrl` checkout flow or require separate API logic
+- [x] Map GHL Invoice payload to PayMongo Checkout Session
+- [x] Handle invoice status updates via GoHighLevel API when payment succeeds (Verified via Postman/Sandbox)
+
 ### [x] 1️⃣ Priority: Provider Config Resilience (Private Integration)
 
 > Currently, the integration uses the central `.env` API keys for all sub-accounts because it is a private integration apps. However, we need to improve the GHL Connect Config flow so it is resilient.
@@ -67,6 +81,17 @@
 - [x] Handle expired checkout sessions — Auto-create new session if previous one expired
 - [x] Customer billing address — Pass full address from GHL contact to PayMongo
 - [x] **Currency support beyond PHP** — Handle GHL locations using USD or other currencies (USD limited to cards; others rejected)
+
+### [ ] Recurring Payments (Funnels)
+
+> Support recurring subscriptions initiated from GHL funnels.
+
+- [ ] Investigate how GHL sends `mode: "subscription"` in `payment_initiate_props`
+- [ ] Map GHL subscription details (recurring amount, interval) to PayMongo
+- [ ] Determine card vaulting strategy (PayMongo's limitations with hosted checkout vs UI Elements)
+- [ ] Implement `create_subscription` handler for `queryUrl`
+- [ ] Handle `subscription.created` and `subscription.charged` webhook events
+- [ ] Handle subscription cancellations (`cancel_subscription` queryUrl)
 
 ---
 

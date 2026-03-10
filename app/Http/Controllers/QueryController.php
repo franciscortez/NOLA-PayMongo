@@ -29,7 +29,7 @@ class QueryController extends Controller
       $type = $payload['type'];
       $apiKey = $payload['apiKey'] ?? null;
 
-      Log::channel('payments')->info('GHL query received', [
+      Log::info('GHL query received', [
          'type' => $type,
          'charge_id' => $payload['chargeId'] ?? null,
       ]);
@@ -68,7 +68,7 @@ class QueryController extends Controller
    {
       $chargeId = $request->input('chargeId', '');
       $result = $this->ghlQueryService->verifyPayment($chargeId, $service);
-      Log::channel('payments')->info('GHL verify result', [
+      Log::info('GHL verify result', [
          'charge_id' => $chargeId,
          'success' => $result['success'] ?? !($result['failed'] ?? false),
       ]);
@@ -86,7 +86,7 @@ class QueryController extends Controller
       $chargeId = $request->input('chargeId', '');
       $amount = (float) $request->input('amount', 0);
       $result = $this->ghlQueryService->refundPayment($chargeId, $amount, $service);
-      Log::channel('payments')->info('GHL refund result', [
+      Log::info('GHL refund result', [
          'charge_id' => $chargeId,
          'amount' => $amount,
          'success' => $result['success'] ?? false,

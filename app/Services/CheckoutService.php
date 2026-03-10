@@ -27,6 +27,7 @@ class CheckoutService
       $phone = $data['phone'] ?? null;
       $transactionId = $data['transaction_id'] ?? '';
       $orderId = $data['order_id'] ?? '';
+      $invoiceId = $data['invoice_id'] ?? '';
       $locationId = $data['location_id'] ?? '';
 
       $successUrl = url('/checkout/success') . '?' . http_build_query([
@@ -106,6 +107,7 @@ class CheckoutService
       $metadata = array_filter([
          'ghl_transaction_id' => $transactionId,
          'ghl_order_id' => $orderId,
+         'ghl_invoice_id' => $invoiceId,
          'ghl_location_id' => $locationId,
       ]);
 
@@ -133,6 +135,7 @@ class CheckoutService
          'payment_intent_id' => $result['payment_intent_id'] ?? null,
          'ghl_transaction_id' => $transactionId ?: null,
          'ghl_order_id' => $orderId ?: null,
+         'ghl_invoice_id' => $invoiceId ?: null,
          'ghl_location_id' => $locationId ?: null,
          'amount' => $amount,
          'currency' => $currency,

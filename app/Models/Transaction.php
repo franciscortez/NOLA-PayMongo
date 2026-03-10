@@ -12,6 +12,7 @@ class Transaction extends Model
       'payment_id',
       'ghl_transaction_id',
       'ghl_order_id',
+      'ghl_invoice_id',
       'ghl_location_id',
       'amount',
       'amount_refunded',

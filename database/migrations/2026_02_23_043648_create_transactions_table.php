@@ -21,6 +21,7 @@ return new class extends Migration {
             // GHL references
             $table->string('ghl_transaction_id')->nullable()->index();
             $table->string('ghl_order_id')->nullable();
+            $table->string('ghl_invoice_id')->nullable()->index();
             $table->string('ghl_location_id')->nullable()->index();
 
             // Payment details

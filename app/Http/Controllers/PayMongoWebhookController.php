@@ -24,7 +24,7 @@ class PayMongoWebhookController extends Controller
    {
       $payload = $request->validated();
 
-      Log::channel('payments')->info('PayMongo webhook received', [
+      Log::info('PayMongo webhook received', [
          'event_type' => $payload['data']['attributes']['type'] ?? 'unknown',
          'event_id' => $payload['data']['id'] ?? null,
       ]);
@@ -48,7 +48,7 @@ class PayMongoWebhookController extends Controller
       );
 
       if (!$webhookLog->wasRecentlyCreated && $webhookLog->status === 'processed') {
-         Log::channel('payments')->info('PayMongo webhook duplicate skipped', ['event_id' => $eventId]);
+         Log::info('PayMongo webhook duplicate skipped', ['event_id' => $eventId]);
          return response()->json(['message' => 'Already processed'], 200);
       }
 
@@ -71,7 +71,7 @@ class PayMongoWebhookController extends Controller
 
       } catch (\Exception $e) {
          $webhookLog->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
-         Log::channel('payments')->error('PayMongo webhook processing failed', [
+         Log::error('PayMongo webhook processing failed', [
             'event_id' => $eventId,
             'event_type' => $eventType,
             'error' => $e->getMessage(),

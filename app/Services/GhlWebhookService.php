@@ -18,9 +18,13 @@ class GhlWebhookService
     */
    public function sendPaymentCaptured(Transaction $transaction): bool
    {
-      if (!$transaction->ghl_transaction_id || !$transaction->ghl_location_id) {
-         Log::info('GhlWebhookService: Skipping — no GHL transaction/location ID', [
+      $ghlReferenceId = $transaction->ghl_transaction_id ?: $transaction->ghl_invoice_id;
+
+      if (!$ghlReferenceId || !$transaction->ghl_location_id) {
+         Log::info('GhlWebhookService: Skipping — no GHL reference (transaction/invoice) or location ID', [
             'transaction_id' => $transaction->id,
+            'ghl_transaction_id' => $transaction->ghl_transaction_id,
+            'ghl_invoice_id' => $transaction->ghl_invoice_id,
          ]);
          return false;
       }
@@ -32,7 +36,7 @@ class GhlWebhookService
       $payload = [
          'event' => 'payment.captured',
          'chargeId' => $chargeId,
-         'ghlTransactionId' => $transaction->ghl_transaction_id,
+         'ghlTransactionId' => $ghlReferenceId,
          'chargeSnapshot' => [
             'status' => 'succeeded',
             'amount' => $transaction->amount, // minor units
@@ -43,7 +47,7 @@ class GhlWebhookService
          'apiKey' => $this->resolveApiKey($transaction),
       ];
 
-      Log::channel('payments')->info('GHL webhook payment.captured sent', [
+      Log::info('GHL webhook payment.captured sent', [
          'ghl_transaction_id' => $transaction->ghl_transaction_id,
          'charge_id' => $chargeId,
       ]);
@@ -60,7 +64,7 @@ class GhlWebhookService
          ]);
 
          if (!$response->successful()) {
-            Log::channel('payments')->error('GHL webhook delivery failed', [
+            Log::error('GHL webhook delivery failed', [
                'ghl_transaction_id' => $transaction->ghl_transaction_id,
                'status' => $response->status(),
             ]);
@@ -74,7 +78,7 @@ class GhlWebhookService
 
          return true;
       } catch (\Exception $e) {
-         Log::channel('payments')->error('GHL webhook exception', [
+         Log::error('GHL webhook exception', [
             'ghl_transaction_id' => $transaction->ghl_transaction_id,
             'error' => $e->getMessage(),
          ]);

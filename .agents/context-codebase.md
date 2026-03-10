@@ -47,7 +47,8 @@ app/
 │   │   ├── ProviderConfigController.php — Register/delete provider in GHL
 │   │   ├── CheckoutController.php       — Checkout iFrame + PayMongo sessions
 │   │   ├── QueryController.php          — GHL queryUrl handler (verify, refund, list_payment_methods, charge_payment)
-│   │   └── PayMongoWebhookController.php — PayMongo webhook event handler
+│   │   ├── PayMongoWebhookController.php — PayMongo webhook event handler
+│   │   └── HomeController.php           — OAuth link generator + Health Check
 │   ├── Middleware/
 │   │   ├── AllowIframeEmbedding.php     — Removes X-Frame-Options for GHL iFrame
 │   │   ├── CheckGhlToken.php            — Auto-refreshes GHL tokens before API calls
@@ -73,8 +74,9 @@ resources/views/
 │   ├── index.blade.php                 — Main checkout iFrame (GHL embeds this)
 │   ├── success.blade.php               — Post-payment success page (popup)
 │   └── cancel.blade.php                — Post-payment cancel page (popup)
-└── provider/
-    └── config.blade.php                — Provider setup UI (connect/disconnect)
+├── provider/
+│   └── config.blade.php                — Provider setup UI (connect/disconnect)
+└── welcome.blade.php                   — Installation welcome page (OAuth links)
 database/migrations/
 ├── 2026_02_23_015622_create_location_tokens_table.php — GHL location OAuth tokens
 ├── 2026_02_23_043648_create_transactions_table.php — Payment transactions
@@ -110,6 +112,7 @@ GHL loads iFrame → /checkout (CheckoutController::show)
   → Customer pays → PayMongo redirects to /checkout/success
   → Popup closes → iFrame JS polls /checkout/status/{sessionId}
   → If paid → notifies GHL via postMessage (`custom_element_success_response`)
+  → For Invoices: JS extracts `invoiceId` from `payment_initiate_props` and passes it to `/checkout/create-session`.
 ```
 
 ### 3. Webhook Flow (PayMongo → App → GHL)
@@ -134,7 +137,7 @@ PayMongo sends webhook to /api/webhook/paymongo
 ```
 GHL sends POST to /api/webhook/ghl-query with { type: "..." }
   → QueryController dispatches by type:
-    → "verify" — Confirms payment status (DB first, then PayMongo API)
+    → "verify" — Confirms payment status (Checks DB for `paid`, `refunded`, or `partially_refunded` first)
     → "refund" — Processes refund via PayMongo, updates DB
     → "list_payment_methods" — Placeholder (returns empty array)
     → "charge_payment" — Placeholder (not yet implemented)
@@ -163,6 +166,7 @@ GHL sends POST to /api/webhook/ghl-query with { type: "..." }
 | payment_id          | string          | PayMongo payment ID                          |
 | ghl_transaction_id  | string          | GHL transaction reference                    |
 | ghl_order_id        | string          | GHL order reference                          |
+| ghl_invoice_id      | string          | GHL invoice reference                        |
 | ghl_location_id     | string          | GHL location ID                              |
 | amount              | integer         | Amount in cents (centavos)                   |
 | currency            | string(3)       | Default: PHP                                 |
@@ -280,4 +284,4 @@ PAYMONGO_WEBHOOK_SECRET=whsk_xxx
 2. **Popup blocker**: If browser blocks popup, falls back to redirect
 3. **`list_payment_methods` and `charge_payment`**: Placeholder only — not yet implemented (card vaulting)
 4. **Provider config uses `.env` keys**: PayMongo keys are pushed from server env, not user-input
-5. **Security**: HTTPS enforced in non-local/testing via `EnsureHttps` middleware; rate limits on checkout (30/min) and webhooks (120/min); CSRF excluded only for `checkout/create-session`; PayMongo signature verified; structured logs in `storage/logs/payments-YYYY-MM-DD.log`
+5. **Security**: HTTPS enforced in non-local/testing via `EnsureHttps` middleware; rate limits on checkout (30/min) and webhooks (120/min); CSRF excluded only for `checkout/create-session`; PayMongo signature verified; structured logs in `storage/logs/laravel.log` (consolidated)

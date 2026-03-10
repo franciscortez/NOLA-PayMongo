@@ -4,13 +4,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\QueryController;
 use App\Http\Controllers\PayMongoWebhookController;
-use App\Http\Controllers\HealthCheckController;
+use App\Http\Controllers\HomeController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::get('/health', [HealthCheckController::class, 'index']);
+Route::get('/health', [HomeController::class, 'healthCheck']);
 
 // GHL queryUrl — receives verify, refund, list_payment_methods, charge_payment
 Route::post('/webhook/ghl-query', [QueryController::class, 'handle']);

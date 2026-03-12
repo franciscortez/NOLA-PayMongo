@@ -33,7 +33,10 @@ class ProviderConfigController extends Controller
         $locationName = $locationId; // Default to ID if name is unknown
 
         if ($locationToken) {
-            $isConnected = $this->providerConfigService->isProviderRegistered($locationId, $locationToken->access_token);
+            $isRegisteredInGhl = $this->providerConfigService->isProviderRegistered($locationId, $locationToken->access_token);
+            $hasLocalKeys = !empty($locationToken->paymongo_live_secret_key) && !empty($locationToken->paymongo_test_secret_key);
+            
+            $isConnected = $isRegisteredInGhl && $hasLocalKeys;
             
             // Try to get the name from DB or API
             $locationName = $locationToken->location_name ?? $locationId;

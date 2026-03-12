@@ -128,18 +128,12 @@ class GhlQueryService
       }
 
 
-      return [
-         'success' => true,
-         'chargeSnapshot' => [
-            'id' => $paymentId,
-            'status' => 'succeeded',
-            'amount' => ($result['amount'] ?? ($transaction->amount ?? 0)) / 100,
-            'chargeId' => $chargeId,
-            'chargedAt' => now()->timestamp,
-         ],
-      ];
-
       // If all checks fail or we could not confirm payment
+      Log::warning('GhlQueryService: Payment verification failed — API confirmed payment is not paid', [
+         'chargeId' => $chargeId,
+         'status' => $status
+      ]);
+
       return ['success' => false, 'failed' => true];
    }
 

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\LocationToken;
 
 class GhlWebhookService
 {
@@ -97,7 +98,19 @@ class GhlWebhookService
    protected function resolveApiKey(Transaction $transaction): string
    {
       $isProduction = $transaction->is_live_mode;
+      $locationId = $transaction->ghl_location_id;
 
+      if ($locationId) {
+         $token = LocationToken::where('location_id', $locationId)->first();
+         if ($token) {
+            $key = $isProduction ? $token->paymongo_live_secret_key : $token->paymongo_test_secret_key;
+            if ($key) {
+               return $key;
+            }
+         }
+      }
+
+      // Fallback to global config if no location-specific key is found
       return $isProduction
          ? config('services.paymongo.live_secret_key')
          : config('services.paymongo.test_secret_key');

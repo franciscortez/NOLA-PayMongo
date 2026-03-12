@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Log;
+use App\Models\LocationToken;
 
 class CheckoutService
 {
@@ -12,6 +13,26 @@ class CheckoutService
    public function __construct(PayMongoService $payMongoService)
    {
       $this->payMongoService = $payMongoService;
+   }
+
+   /**
+    * Resolve the PayMongoService instance with dynamic keys for this location.
+    */
+   private function resolvePayMongoService(bool $isLiveMode, ?string $locationId): PayMongoService
+   {
+      $service = $this->payMongoService->setProduction($isLiveMode);
+
+      if ($locationId) {
+         $token = LocationToken::where('location_id', $locationId)->first();
+         if ($token) {
+            $secretKey = $isLiveMode ? $token->paymongo_live_secret_key : $token->paymongo_test_secret_key;
+            if ($secretKey) {
+               return $service->setDynamicKeys($secretKey);
+            }
+         }
+      }
+
+      return $service;
    }
 
    /**
@@ -118,7 +139,7 @@ class CheckoutService
       }
 
       $isLiveMode = str_starts_with($publishableKey ?? '', 'pk_live_') || $isLiveModeFallback;
-      $service = $this->payMongoService->setProduction($isLiveMode);
+      $service = $this->resolvePayMongoService($isLiveMode, $locationId);
 
       $result = $service->createCheckoutSession($payload);
 
@@ -173,7 +194,11 @@ class CheckoutService
          ];
       }
 
-      $result = $this->payMongoService->retrieveCheckoutSession($sessionId);
+      $isLiveMode = $transaction ? (bool) $transaction->is_live_mode : false;
+      $locationId = $transaction ? $transaction->ghl_location_id : null;
+      $service = $this->resolvePayMongoService($isLiveMode, $locationId);
+
+      $result = $service->retrieveCheckoutSession($sessionId);
 
       if (!$result['success']) {
          return ['status' => 'unknown'];

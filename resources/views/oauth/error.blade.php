@@ -20,6 +20,14 @@
       tailwind.config = {
          theme: {
             extend: {
+               colors: {
+                  brand: {
+                     primary: '#2563eb', // blue-600
+                     secondary: '#1e3a8a', // blue-900
+                     accent: '#ffffff',
+                     surface: '#f8fafc', // slate-50
+                  }
+               },
                fontFamily: {
                   sans: ['Inter', 'sans-serif'],
                   display: ['Outfit', 'sans-serif'],
@@ -42,28 +50,32 @@
 <body
    class="bg-slate-50 flex items-center justify-center min-h-screen font-sans text-slate-800 antialiased p-6 relative overflow-hidden">
 
-   <!-- Background Orbs -->
+   <!-- Background Orbs (Blue Theme) -->
    <div
-      class="absolute top-0 left-1/4 w-96 h-96 bg-rose-200/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob">
+      class="absolute top-0 left-1/4 w-96 h-96 bg-blue-100/40 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob">
    </div>
    <div
-      class="absolute -bottom-8 right-1/4 w-96 h-96 bg-orange-200/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob">
+      class="absolute -bottom-8 right-1/4 w-96 h-96 bg-indigo-50/40 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob">
    </div>
 
    <!-- Main Card -->
    <div
       class="bg-white/80 backdrop-blur-xl p-10 rounded-[2rem] shadow-2xl shadow-rose-900/5 ring-1 ring-slate-900/5 max-w-md w-full text-center relative z-10 animate-fade-in-up">
 
-      <div class="mb-8">
-         <div
-            class="w-16 h-16 bg-gradient-to-br from-rose-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-rose-500/30 transform -rotate-6">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white transform rotate-6" fill="none"
-               viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-               <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+      <div class="mb-10">
+         <!-- Logo Frame Placeholder -->
+         <div class="mb-6 relative inline-block">
+            <div class="w-24 h-24 bg-brand-surface border-2 border-dashed border-blue-200 rounded-full flex items-center justify-center mx-auto transition-all hover:border-brand-primary group">
+               <div class="w-20 h-20 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30 transition-transform group-hover:scale-95">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none"
+                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                     <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+               </div>
+            </div>
          </div>
-         <h1 class="text-3xl font-display font-bold text-slate-900 tracking-tight">Authentication Error</h1>
+         <h1 class="text-3xl font-display font-bold text-slate-900 tracking-tight">OAuth Error</h1>
          <p class="text-sm text-slate-500 mt-2 leading-relaxed">Something went wrong while connecting to GoHighLevel.
          </p>
       </div>
@@ -88,7 +100,7 @@
       </div>
 
       <a href="/"
-         class="group w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 px-6 rounded-xl transition-all duration-200 shadow-md shadow-slate-900/20 flex justify-center items-center gap-2 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm">
+         class="group w-full bg-brand-secondary hover:bg-brand-primary text-white font-medium py-3.5 px-6 rounded-xl transition-all duration-200 shadow-md shadow-blue-900/20 flex justify-center items-center gap-2 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm">
          Try Again
       </a>
 

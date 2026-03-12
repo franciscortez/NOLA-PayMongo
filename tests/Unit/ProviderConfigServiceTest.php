@@ -19,7 +19,8 @@ class ProviderConfigServiceTest extends TestCase
       Config::set('services.ghl.api_version', '2021-07-28');
       Config::set('app.url', 'https://myapp.com');
 
-      $this->providerConfigService = new ProviderConfigService();
+      $payMongoMock = \Mockery::mock(\App\Services\PayMongoService::class);
+      $this->providerConfigService = new ProviderConfigService($payMongoMock);
    }
 
    public function test_register_custom_provider_success()

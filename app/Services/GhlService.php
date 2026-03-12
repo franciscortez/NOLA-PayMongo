@@ -35,6 +35,13 @@ class GhlService
 
       $locationToken = $this->saveTokenData($data);
 
+      if ($locationToken) {
+         $details = $this->getLocationDetails($locationToken->location_id, $data['access_token']);
+         if ($details && isset($details['name'])) {
+            $locationToken->update(['location_name' => $details['name']]);
+         }
+      }
+
       return [
          'success' => true,
          'token_data' => $data,
@@ -63,6 +70,30 @@ class GhlService
    }
 
    /**
+    * Fetches location details (like name) from HighLevel API.
+    */
+   public function getLocationDetails(string $locationId, string $accessToken)
+   {
+      $response = Http::withToken($accessToken)
+         ->withHeaders([
+            'Version' => config('services.ghl.api_version', '2021-07-28'),
+            'Accept' => 'application/json',
+         ])
+         ->get(config('services.ghl.api_base') . "/locations/{$locationId}");
+
+      if (!$response->successful()) {
+         Log::error('HighLevel Get Location Details Failed', [
+            'location_id' => $locationId,
+            'status' => $response->status(),
+            'body' => $response->json(),
+         ]);
+         return null;
+      }
+
+      return $response->json('location');
+   }
+
+   /**
     * Saves or updates the token data in the database.
     */
    protected function saveTokenData(array $data)
@@ -80,6 +111,7 @@ class GhlService
             'refresh_token' => $data['refresh_token'],
             'expires_at' => now()->addSeconds($data['expires_in']),
             'user_type' => $data['userType'] ?? 'Location',
+            // Typically name isn't here, but if it was we'd save it
          ]
       );
    }

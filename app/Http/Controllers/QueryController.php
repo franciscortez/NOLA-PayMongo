@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\QueryUrlRequest;
 use App\Services\PayMongoService;
 use App\Services\GhlQueryService;
+use App\Models\LocationToken;
 use Illuminate\Support\Facades\Log;
 
 class QueryController extends Controller
@@ -28,15 +29,15 @@ class QueryController extends Controller
 
       $type = $payload['type'];
       $apiKey = $payload['apiKey'] ?? null;
+      $locationId = $payload['locationId'] ?? null;
 
       Log::info('GHL query received', [
          'type' => $type,
          'charge_id' => $payload['chargeId'] ?? null,
+         'location_id' => $locationId,
       ]);
 
-      // Determine which PayMongo secret key to use based on the apiKey GHL sends.
-      // If the apiKey matches a test key, use test; otherwise use live.
-      $service = $this->resolveService($apiKey);
+      $service = $this->resolveService($apiKey, $locationId);
 
       return match ($type) {
          'verify' => $this->handleVerify($request, $service),
@@ -48,14 +49,82 @@ class QueryController extends Controller
    }
 
    /**
-    * Resolve which PayMongo service instance (test vs live) to use.
+    * Resolve the PayMongoService instance for this request.
+    *
+    * If GHL sends an apiKey, we use it directly (per-location / multi-account).
+    * If the key is new or changed for this location, we automatically provision
+    * a webhook in that PayMongo account and persist everything to the DB.
+    *
+    * Falls back to .env config if no apiKey is received from GHL.
     */
-   protected function resolveService(?string $apiKey): PayMongoService
+   protected function resolveService(?string $apiKey, ?string $locationId): PayMongoService
    {
-      // If the apiKey GHL sends matches our test secret key, use test mode
-      $isProduction = ($apiKey !== config('services.paymongo.test_secret_key'));
+      // No key from GHL — fall back to .env config (legacy single-account behaviour)
+      if (!$apiKey) {
+         $isProduction = ($apiKey !== config('services.paymongo.test_secret_key'));
+         return $this->payMongoService->setProduction($isProduction);
+      }
 
-      return $this->payMongoService->setProduction($isProduction);
+      $isLive = str_starts_with($apiKey, 'sk_live_');
+      $keyColumn = $isLive ? 'paymongo_live_secret_key' : 'paymongo_test_secret_key';
+      $webhookIdColumn = $isLive ? 'paymongo_live_webhook_id' : 'paymongo_test_webhook_id';
+      $webhookSecretColumn = $isLive ? 'paymongo_live_webhook_secret' : 'paymongo_test_webhook_secret';
+
+      // If we have a locationId, attempt to auto-provision the webhook when needed
+      if ($locationId) {
+         $token = LocationToken::where('location_id', $locationId)->first();
+
+         if ($token) {
+            $storedKey = $token->{$keyColumn};
+            $storedWebhookId = $token->{$webhookIdColumn};
+
+            // Provision a webhook if:
+            // - No webhook exists yet for this location+mode, OR
+            // - The API key has changed (user updated their keys in GHL)
+            if (!$storedWebhookId || $storedKey !== $apiKey) {
+               $this->provisionWebhook($token, $apiKey, $locationId, $isLive);
+            }
+         }
+      }
+
+      return $this->payMongoService->setDynamicKeys($apiKey);
+   }
+
+   /**
+    * Create a webhook in the PayMongo account and save the credentials to the DB.
+    */
+   protected function provisionWebhook(LocationToken $token, string $apiKey, string $locationId, bool $isLive): void
+   {
+      $webhookIdColumn = $isLive ? 'paymongo_live_webhook_id' : 'paymongo_test_webhook_id';
+      $webhookSecretColumn = $isLive ? 'paymongo_live_webhook_secret' : 'paymongo_test_webhook_secret';
+      $secretKeyColumn = $isLive ? 'paymongo_live_secret_key' : 'paymongo_test_secret_key';
+
+      Log::info('PayMongo: Provisioning webhook for location', [
+         'location_id' => $locationId,
+         'is_live' => $isLive,
+      ]);
+
+      $webhook = $this->payMongoService->createWebhook($apiKey, $locationId);
+
+      if ($webhook) {
+         $token->update([
+            $secretKeyColumn => $apiKey,
+            $webhookIdColumn => $webhook['id'],
+            $webhookSecretColumn => $webhook['secret_key'],
+         ]);
+
+         Log::info('PayMongo: Webhook provisioned and saved', [
+            'location_id' => $locationId,
+            'webhook_id' => $webhook['id'],
+            'is_live' => $isLive,
+         ]);
+      } else {
+         // Still save the key even if webhook creation failed so we can retry later
+         $token->update([$secretKeyColumn => $apiKey]);
+         Log::warning('PayMongo: Webhook creation failed, key saved without webhook', [
+            'location_id' => $locationId,
+         ]);
+      }
    }
 
    /**

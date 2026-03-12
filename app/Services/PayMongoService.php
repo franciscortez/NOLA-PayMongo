@@ -10,39 +10,166 @@ class PayMongoService
    protected string $baseUrl = 'https://api.paymongo.com/v1';
    protected bool $isProduction;
 
+   // Dynamic per-location keys (optional — falls back to .env if not set)
+   protected ?string $dynamicSecretKey = null;
+   protected ?string $dynamicPublishableKey = null;
+
    public function __construct()
    {
       $this->isProduction = (bool) config('services.paymongo.is_production', false);
    }
 
    /**
-    * Get the appropriate secret key based on environment.
+    * Get the appropriate secret key.
+    * Uses the per-location dynamic key if available, otherwise falls back to .env config.
     */
    public function getSecretKey(): string
    {
+      if ($this->dynamicSecretKey) {
+         return $this->dynamicSecretKey;
+      }
+
       return $this->isProduction
          ? config('services.paymongo.live_secret_key')
          : config('services.paymongo.test_secret_key');
    }
 
    /**
-    * Get the appropriate publishable key based on environment.
+    * Get the appropriate publishable key.
+    * Uses the per-location dynamic key if available, otherwise falls back to .env config.
     */
    public function getPublishableKey(): string
    {
+      if ($this->dynamicPublishableKey) {
+         return $this->dynamicPublishableKey;
+      }
+
       return $this->isProduction
          ? config('services.paymongo.live_publishable_key')
          : config('services.paymongo.test_publishable_key');
    }
 
    /**
-    * Override production mode (e.g., based on GHL apiKey).
+    * Override production mode (e.g., based on GHL apiKey prefix).
     */
    public function setProduction(bool $isProduction): self
    {
       $clone = clone $this;
       $clone->isProduction = $isProduction;
       return $clone;
+   }
+
+   /**
+    * Set dynamic per-location keys (used for multi-account support).
+    * These override the .env config for the lifetime of this instance.
+    */
+   public function setDynamicKeys(string $secretKey, ?string $publishableKey = null): self
+   {
+      $clone = clone $this;
+      $clone->dynamicSecretKey = $secretKey;
+      $clone->dynamicPublishableKey = $publishableKey;
+      // Automatically determine live/test mode from the key prefix
+      $clone->isProduction = str_starts_with($secretKey, 'sk_live_');
+      return $clone;
+   }
+
+   /**
+    * Create a PayMongo Webhook for a specific location.
+    * Returns the webhook secret (whsk_xxx) on success, or null on failure.
+    */
+   public function createWebhook(string $secretKey, string $locationId, bool $isRetry = false): ?array
+   {
+      $webhookUrl = rtrim(config('app.url'), '/') . "/api/webhook/paymongo/{$locationId}";
+
+      $events = [
+         'payment.paid',
+         'payment.failed',
+         'payment.refunded',
+         'checkout_session.payment.paid',
+      ];
+
+      Log::info('PayMongo: Creating webhook', [
+         'location_id' => $locationId,
+         'url' => $webhookUrl,
+      ]);
+
+      $response = Http::withBasicAuth($secretKey, '')
+         ->withHeaders(['Content-Type' => 'application/json'])
+         ->post("{$this->baseUrl}/webhooks", [
+            'data' => [
+               'attributes' => [
+                  'url' => $webhookUrl,
+                  'events' => $events,
+               ],
+            ],
+         ]);
+
+      if (!$response->successful()) {
+         $errors = $response->json('errors');
+         $firstError = $errors[0] ?? [];
+
+         // If the webhook already exists, we need to delete it and recreate it 
+         // because PayMongo only provides the webhook secret (whsk_...) upon creation.
+          if (!$isRetry && isset($firstError['code']) && $firstError['code'] === 'resource_exists') {
+             Log::info('PayMongo: Webhook already exists. Attempting to delete and recreate...', ['location_id' => $locationId]);
+             
+             $existingWebhooks = $this->listWebhooks($secretKey);
+             foreach ($existingWebhooks as $wh) {
+                if (($wh['attributes']['url'] ?? '') === $webhookUrl) {
+                   $this->disableWebhook($secretKey, $wh['id']);
+                   Log::info('PayMongo: Deleted existing webhook', ['location_id' => $locationId, 'webhook_id' => $wh['id']]);
+                }
+             }
+             
+             // Try creating it again (recursion once)
+             return $this->createWebhook($secretKey, $locationId, true);
+          }
+
+         Log::error('PayMongo: Failed to create webhook', [
+            'location_id' => $locationId,
+            'status' => $response->status(),
+            'body' => $response->json(),
+         ]);
+         return null;
+      }
+
+      $data = $response->json('data');
+
+      Log::info('PayMongo: Webhook created', [
+         'location_id' => $locationId,
+         'webhook_id' => $data['id'],
+      ]);
+
+      return [
+         'id' => $data['id'],
+         'secret_key' => $data['attributes']['secret_key'], // This is the webhook secret (whsk_xxx)
+      ];
+   }
+
+   /**
+    * List all existing webhooks for a given secret key.
+    */
+   public function listWebhooks(string $secretKey): array
+   {
+      $response = Http::withBasicAuth($secretKey, '')
+         ->get("{$this->baseUrl}/webhooks");
+
+      if (!$response->successful()) {
+         return [];
+      }
+
+      return $response->json('data', []);
+   }
+
+   /**
+    * Disable (delete) a webhook by its ID.
+    */
+   public function disableWebhook(string $secretKey, string $webhookId): bool
+   {
+      $response = Http::withBasicAuth($secretKey, '')
+         ->delete("{$this->baseUrl}/webhooks/{$webhookId}");
+
+      return $response->successful();
    }
 
    /**

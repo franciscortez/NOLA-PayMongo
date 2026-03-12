@@ -44,6 +44,7 @@ class QueryUrlRequest extends FormRequest
         return [
             'type' => 'required|string|in:verify,refund,list_payment_methods,charge_payment',
             'apiKey' => ['nullable', 'string', 'regex:/^sk_(test|live)_[a-zA-Z0-9]+$/'],
+            'locationId' => 'nullable|string|max:255',
             'chargeId' => ['nullable', 'string', 'regex:/^(pi|cs|pay)_[a-zA-Z0-9]+$/'],
             'transactionId' => 'nullable|string',
             'amount' => 'nullable|numeric|min:0',

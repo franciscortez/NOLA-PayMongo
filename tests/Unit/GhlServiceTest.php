@@ -36,6 +36,9 @@ class GhlServiceTest extends TestCase
             'expires_in' => 86400,
             'locationId' => 'loc_123',
             'userType' => 'Location'
+         ], 200),
+         'services.leadconnectorhq.com/locations/loc_123' => Http::response([
+            'location' => ['name' => 'Test Location Name']
          ], 200)
       ]);
 
@@ -46,6 +49,7 @@ class GhlServiceTest extends TestCase
 
       $this->assertDatabaseHas('location_tokens', [
          'location_id' => 'loc_123',
+         'location_name' => 'Test Location Name',
          'user_type' => 'Location'
       ]);
    }
@@ -116,5 +120,41 @@ class GhlServiceTest extends TestCase
       $result = $this->ghlService->refreshToken($token);
 
       $this->assertFalse($result);
+   }
+
+   public function test_get_location_details_success()
+   {
+      Http::fake([
+         'services.leadconnectorhq.com/locations/loc_123' => Http::response([
+            'location' => [
+               'id' => 'loc_123',
+               'name' => 'Awesome Business'
+            ]
+         ], 200)
+      ]);
+
+      $details = $this->ghlService->getLocationDetails('loc_123', 'token_abc');
+
+      $this->assertNotNull($details);
+      $this->assertEquals('Awesome Business', $details['name']);
+
+      Http::assertSent(function ($request) {
+         return $request->hasHeader('Version', '2021-07-28') &&
+                $request->hasHeader('Authorization', 'Bearer token_abc') &&
+                $request->url() === 'https://services.leadconnectorhq.com/locations/loc_123';
+      });
+   }
+
+   public function test_get_location_details_failure()
+   {
+      Http::fake([
+         'services.leadconnectorhq.com/locations/loc_nonexistent' => Http::response([
+            'error' => 'Location not found'
+         ], 404)
+      ]);
+
+      $details = $this->ghlService->getLocationDetails('loc_nonexistent', 'token_abc');
+
+      $this->assertNull($details);
    }
 }

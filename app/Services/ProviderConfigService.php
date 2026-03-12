@@ -2,11 +2,19 @@
 
 namespace App\Services;
 
+use App\Models\LocationToken;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class ProviderConfigService
 {
+   protected PayMongoService $payMongoService;
+
+   public function __construct(PayMongoService $payMongoService)
+   {
+      $this->payMongoService = $payMongoService;
+   }
+
    /**
     * Registers the Custom Payment Provider for the location.
     */
@@ -109,5 +117,91 @@ class ProviderConfigService
       }
 
       return ['success' => true];
+   }
+
+   /**
+    * setupPayMongoIntegration handles the full lifecycle of connecting PayMongo:
+    * 1. Registration of the Provider
+    * 2. Updating the keys for Connect Config
+    * 3. Eagerly provisioning the webhooks
+    * 4. Persisting everything to the local database
+    */
+   public function setupPayMongoIntegration(LocationToken $token, array $keys): array
+   {
+      $locationId = $token->location_id;
+      $accessToken = $token->access_token;
+
+      // 1. Register Custom Provider in GHL
+      $regResult = $this->registerCustomProvider($locationId, $accessToken);
+      if (!$regResult['success']) {
+         return $regResult;
+      }
+
+      // 2. Push user's keys to GHL Connect Config API
+      $configResult = $this->updateConnectConfig($locationId, $accessToken, $keys);
+      if (!$configResult['success']) {
+         return $configResult;
+      }
+
+      // 3. Provision Webhooks Eagerly
+      $liveSecret = $keys['live_secret_key'];
+      $testSecret = $keys['test_secret_key'];
+
+      $liveWebhookId = $token->paymongo_live_webhook_id;
+      $liveWebhookSecret = $token->paymongo_live_webhook_secret;
+      if (!$liveWebhookSecret || $token->paymongo_live_secret_key !== $liveSecret) {
+         $liveWebhook = $this->payMongoService->setDynamicKeys($liveSecret)->createWebhook($liveSecret, $locationId);
+         if ($liveWebhook) {
+            $liveWebhookId = $liveWebhook['id'];
+            $liveWebhookSecret = $liveWebhook['secret_key'];
+         }
+      }
+
+      $testWebhookId = $token->paymongo_test_webhook_id;
+      $testWebhookSecret = $token->paymongo_test_webhook_secret;
+      if (!$testWebhookSecret || $token->paymongo_test_secret_key !== $testSecret) {
+         $testWebhook = $this->payMongoService->setDynamicKeys($testSecret)->createWebhook($testSecret, $locationId);
+         if ($testWebhook) {
+            $testWebhookId = $testWebhook['id'];
+            $testWebhookSecret = $testWebhook['secret_key'];
+         }
+      }
+
+      // 4. Save the keys and webhook secrets to the local database
+      $token->update([
+         'paymongo_live_publishable_key' => $keys['live_publishable_key'],
+         'paymongo_live_secret_key' => $liveSecret,
+         'paymongo_live_webhook_id' => $liveWebhookId,
+         'paymongo_live_webhook_secret' => $liveWebhookSecret,
+         'paymongo_test_publishable_key' => $keys['test_publishable_key'],
+         'paymongo_test_secret_key' => $testSecret,
+         'paymongo_test_webhook_id' => $testWebhookId,
+         'paymongo_test_webhook_secret' => $testWebhookSecret,
+      ]);
+
+      return ['success' => true];
+   }
+
+   /**
+    * disconnectPayMongoIntegration removes the provider from GHL and clears local DB keys.
+    */
+   public function disconnectPayMongoIntegration(LocationToken $token): array
+   {
+      $result = $this->deleteProvider($token->location_id, $token->access_token);
+
+      if ($result['success']) {
+         $token->update([
+            'paymongo_live_publishable_key' => null,
+            'paymongo_live_secret_key' => null,
+            'paymongo_live_webhook_id' => null,
+            'paymongo_live_webhook_secret' => null,
+            'paymongo_test_publishable_key' => null,
+            'paymongo_test_secret_key' => null,
+            'paymongo_test_webhook_id' => null,
+            'paymongo_test_webhook_secret' => null,
+         ]);
+      }
+
+      return $result;
    }
 }

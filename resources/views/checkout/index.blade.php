@@ -26,9 +26,9 @@
       .spinner {
          width: 40px;
          height: 40px;
-         border: 4px solid rgba(0, 0, 0, 0.1);
-         border-left-color: #0ea5e9;
-         /* Light blue */
+         border: 4px solid rgba(37, 99, 235, 0.1);
+         border-left-color: #2563eb;
+         /* brand-primary */
          border-radius: 50%;
          animation: spin 1s linear infinite;
       }
@@ -49,9 +49,19 @@
 
    <!-- Initial loading state -->
    <div id="loader"
-      class="flex flex-col items-center justify-center w-full h-full absolute inset-0 bg-white/50 backdrop-blur-sm z-10 transition-opacity duration-300">
+      class="flex flex-col items-center justify-center w-full h-full absolute inset-0 bg-white/95 backdrop-blur-sm z-10 transition-opacity duration-300">
+      <!-- Logo Frame Placeholder -->
+      <div class="mb-8 relative scale-75">
+         <div class="w-24 h-24 bg-slate-50 border-2 border-dashed border-blue-200 rounded-full flex items-center justify-center mx-auto group">
+            <div class="w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-900 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+               </svg>
+            </div>
+         </div>
+      </div>
       <div class="spinner mb-4"></div>
-      <p class="text-sm font-medium text-slate-500 font-sans tracking-wide">Initializing secure checkout...</p>
+      <p class="text-xs font-semibold text-slate-400 font-sans tracking-widest uppercase">Initializing Payment</p>
    </div>
 
    <!-- Iframe container: Transparent and fills the entire screen -->
@@ -63,7 +73,17 @@
    <!-- Error Fallback (Minimal) -->
    <div id="errorBox"
       class="hidden flex-col items-center justify-center w-full h-full absolute inset-0 bg-white z-30 px-6 text-center">
-      <div class="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-4">
+      <!-- Logo Frame Placeholder -->
+      <div class="mb-8 relative scale-75 grayscale opacity-50">
+         <div class="w-24 h-24 bg-slate-50 border-2 border-dashed border-blue-200 rounded-full flex items-center justify-center mx-auto">
+            <div class="w-20 h-20 bg-slate-400 rounded-full flex items-center justify-center">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+               </svg>
+            </div>
+         </div>
+      </div>
+      <div class="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-4">
          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round"
                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -73,7 +93,7 @@
       <p id="errorMsg" class="text-slate-600 text-sm mb-6 max-w-sm">There was a problem initiating your secure checkout
          session.</p>
       <button onclick="retryPayment()"
-         class="bg-slate-900 hover:bg-slate-800 text-white font-medium py-2.5 px-5 rounded-lg transition-colors text-sm">
+         class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-8 rounded-xl transition-all shadow-md shadow-blue-600/20 active:scale-95 text-sm">
          Try Again
       </button>
    </div>

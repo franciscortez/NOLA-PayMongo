@@ -20,6 +20,14 @@
         tailwind.config = {
             theme: {
                 extend: {
+                    colors: {
+                        brand: {
+                            primary: '#2563eb', // blue-600
+                            secondary: '#1e3a8a', // blue-900
+                            accent: '#ffffff',
+                            surface: '#f8fafc', // slate-50
+                        }
+                    },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
                         display: ['Outfit', 'sans-serif'],
@@ -47,22 +55,30 @@
 <body
     class="bg-slate-50 min-h-screen font-sans text-slate-800 antialiased relative overflow-hidden flex flex-col items-center justify-center p-6">
 
-    <!-- Beautiful Background Decor -->
-    <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-300/30 rounded-full mix-blend-multiply filter blur-[80px] animate-pulse"
+    <!-- Background Decor (Blue Theme) -->
+    <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100/30 rounded-full mix-blend-multiply filter blur-[80px] animate-pulse"
         style="animation-duration: 8s;"></div>
-    <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-300/30 rounded-full mix-blend-multiply filter blur-[100px] animate-pulse"
+    <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-100/30 rounded-full mix-blend-multiply filter blur-[100px] animate-pulse"
         style="animation-duration: 10s; animation-delay: 2s;"></div>
 
     <!-- Content Container -->
     <div class="relative z-10 max-w-2xl w-full mx-auto text-center animate-fade-in-up">
 
-        <!-- App Icon/Logo Area -->
-        <div
-            class="w-24 h-24 bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl mx-auto mb-8 shadow-2xl shadow-slate-900/20 flex items-center justify-center transform -rotate-3 hover:rotate-0 transition-transform duration-500 hover:scale-105">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-emerald-400 transform rotate-3" fill="none"
-                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
+        <!-- Logo Frame Placeholder -->
+        <div class="mb-10 relative inline-block animate-float">
+            <div
+                class="w-28 h-28 bg-white border-2 border-dashed border-blue-200 rounded-full flex items-center justify-center mx-auto transition-all hover:border-brand-primary group shadow-xl">
+                <div
+                    class="w-24 h-24 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30 transition-transform group-hover:scale-95">
+                    <!-- Temporary Logo Placeholder Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                </div>
+                <span
+                    class="absolute -bottom-2 -right-2 bg-brand-primary text-white text-[10px] px-3 py-1 rounded-full shadow-md font-extrabold tracking-widest">LOGO</span>
+            </div>
         </div>
 
         <h1 class="text-5xl font-display font-extrabold text-slate-900 tracking-tight mb-4">
@@ -77,14 +93,14 @@
 
             <!-- Standard GHL -->
             <a href="{{ $standardUrl }}"
-                class="group relative bg-white/60 backdrop-blur-md p-8 rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:bg-white hover:border-indigo-100 transition-all duration-300 hover:-translate-y-1 text-left flex flex-col h-full overflow-hidden">
+                class="group relative bg-white/60 backdrop-blur-md p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:bg-white hover:border-brand-primary transition-all duration-300 hover:-translate-y-1 text-left flex flex-col h-full overflow-hidden">
                 <div
-                    class="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-bl-[100px] -z-10 transition-transform group-hover:scale-110">
+                    class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-bl-[100px] -z-10 transition-transform group-hover:scale-110">
                 </div>
 
                 <div class="mb-6 flex justify-between items-start">
                     <div
-                        class="p-3 bg-indigo-100/50 text-indigo-600 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
+                        class="p-3 bg-blue-100/50 text-brand-primary rounded-xl group-hover:bg-brand-primary group-hover:text-white transition-colors duration-300">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -92,12 +108,12 @@
                         </svg>
                     </div>
                 </div>
-                <h2 class="text-2xl font-bold text-slate-900 mb-2">Standard GHL</h2>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2 font-display">Standard Account</h2>
                 <p class="text-sm text-slate-500 mb-8 flex-grow">Install the app directly into your primary GoHighLevel
                     account.</p>
 
                 <div
-                    class="inline-flex items-center gap-2 text-indigo-600 font-semibold group-hover:gap-3 transition-all">
+                    class="inline-flex items-center gap-2 text-brand-primary font-semibold group-hover:gap-3 transition-all">
                     Install App
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd"
@@ -107,33 +123,29 @@
                 </div>
             </a>
 
-            <!-- White Label -->
+            <!-- Agency White Label -->
             <a href="{{ $whiteLabelUrl }}"
-                class="group relative bg-white/60 backdrop-blur-md p-8 rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:bg-white hover:border-emerald-100 transition-all duration-300 hover:-translate-y-1 text-left flex flex-col h-full overflow-hidden">
+                class="group relative bg-white/60 backdrop-blur-md p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200/50 hover:shadow-2xl hover:bg-white hover:border-brand-secondary transition-all duration-300 hover:-translate-y-1 text-left flex flex-col h-full overflow-hidden">
                 <div
-                    class="absolute top-0 right-0 w-32 h-32 bg-emerald-50 rounded-bl-[100px] -z-10 transition-transform group-hover:scale-110">
+                    class="absolute top-0 right-0 w-32 h-32 bg-slate-100 rounded-bl-[100px] -z-10 transition-transform group-hover:scale-110">
                 </div>
 
                 <div class="mb-6 flex justify-between items-start">
                     <div
-                        class="p-3 bg-emerald-100/50 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300">
+                        class="p-3 bg-slate-200/50 text-brand-secondary rounded-xl group-hover:bg-brand-secondary group-hover:text-white transition-colors duration-300">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                     </div>
-                    <span
-                        class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-800">
-                        Agency Use
-                    </span>
                 </div>
-                <h2 class="text-2xl font-bold text-slate-900 mb-2">White Label</h2>
-                <p class="text-sm text-slate-500 mb-8 flex-grow">Install via LeadConnector for white-labeled SaaS
-                    agencies.</p>
+                <h2 class="text-2xl font-bold text-slate-900 mb-2 font-display">White Label</h2>
+                <p class="text-sm text-slate-500 mb-8 flex-grow">Install via LeadConnector for white-labeled Agency SaaS
+                    accounts.</p>
 
                 <div
-                    class="inline-flex items-center gap-2 text-emerald-600 font-semibold group-hover:gap-3 transition-all">
+                    class="inline-flex items-center gap-2 text-brand-secondary font-semibold group-hover:gap-3 transition-all">
                     Install App
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd"

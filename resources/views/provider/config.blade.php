@@ -23,6 +23,14 @@
       tailwind.config = {
          theme: {
             extend: {
+               colors: {
+                  brand: {
+                     primary: '#2563eb', // blue-600
+                     secondary: '#1e3a8a', // blue-900
+                     accent: '#ffffff',
+                     surface: '#f8fafc', // slate-50
+                  }
+               },
                fontFamily: {
                   sans: ['Inter', 'sans-serif'],
                   display: ['Outfit', 'sans-serif'],
@@ -45,49 +53,37 @@
 <body
    class="bg-slate-50 flex items-center justify-center min-h-screen font-sans text-slate-800 antialiased p-6 relative overflow-hidden">
 
-   <!-- Beautiful Background Orbs -->
+   <!-- Beautiful Background Orbs (Blue/Navy Theme) -->
    <div
-      class="absolute top-0 left-1/4 w-96 h-96 bg-indigo-200/40 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob">
+      class="absolute top-0 left-1/4 w-96 h-96 bg-blue-200/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob">
    </div>
    <div
-      class="absolute top-0 right-1/4 w-96 h-96 bg-purple-200/40 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000">
+      class="absolute top-0 right-1/4 w-96 h-96 bg-indigo-100/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000">
    </div>
    <div
-      class="absolute -bottom-8 left-1/3 w-96 h-96 bg-emerald-200/40 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000">
-   </div>
+      class="absolute -bottom-8 left-1/3 w-96 h-96 bg-blue-100/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000">
+   </div>   <!-- Main Card -->
+   <div
+      class="bg-white p-10 rounded-[2rem] shadow-2xl ring-1 ring-slate-200 max-w-4xl w-full text-center relative z-10 animate-fade-in-up border-t-8 border-brand-primary">
 
-   <!-- Main Card -->
-   <div
-      class="bg-white/80 backdrop-blur-xl p-10 rounded-[2rem] shadow-2xl shadow-indigo-900/5 ring-1 ring-slate-900/5 max-w-md w-full text-center relative z-10 animate-fade-in-up">
-
-      <div class="mb-8">
-         <div
-            class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-500/30 transform -rotate-6">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white transform rotate-6" fill="none"
-               viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-               <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+      <div class="mb-10">
+         <!-- Logo Frame Placeholder -->
+         <div class="mb-6 relative inline-block">
+            <div class="w-24 h-24 bg-brand-surface border-2 border-dashed border-blue-200 rounded-full flex items-center justify-center mx-auto transition-all hover:border-brand-primary group">
+               <div class="w-20 h-20 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30 transition-transform group-hover:scale-95">
+                  <!-- Temporary Logo Placeholder Icon -->
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none"
+                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                     <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+               </div>
+               <span class="absolute -bottom-2 right-0 bg-white border border-slate-100 text-[10px] px-2 py-0.5 rounded-full shadow-sm font-bold text-brand-secondary">LOGO</span>
+            </div>
          </div>
          <h1 class="text-3xl font-display font-bold text-slate-900 tracking-tight">NOLA PayMongo</h1>
          <p class="text-sm text-slate-500 mt-2 leading-relaxed">Securely manage your GoHighLevel Custom Payment Provider
             integration.</p>
-
-         <div class="mt-4 flex justify-center">
-            @if($isConnected)
-               <span
-                  class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  Connected to GHL
-               </span>
-            @else
-               <span
-                  class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
-                  <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                  Not Connected
-               </span>
-            @endif
-         </div>
       </div>
 
       {{-- Success Alert --}}
@@ -128,53 +124,161 @@
       @endif
 
 
-      {{-- Connect Provider Form --}}
-      @if(!$isConnected)
-         <form action="{{ route('provider.connect') }}" method="POST" class="mb-3">
-            @csrf
-            <input type="hidden" name="location_id" value="{{ $locationId }}">
-            <button type="submit"
-               class="group w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3.5 px-6 rounded-xl transition-all duration-200 shadow-md shadow-slate-900/20 flex justify-center items-center gap-2 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm">
+      {{-- Connect/Update Provider Form --}}
+      <form id="configForm" action="{{ route('provider.connect') }}" method="POST" class="text-left">
+         @csrf
+         <input type="hidden" name="location_id" value="{{ $locationId }}">
+
+         <div class="flex flex-col md:flex-row gap-8 mb-8">
+            <!-- Live Mode Column -->
+            <div class="flex-1 space-y-4">
+               <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Live Mode Keys
+               </h3>
+               <div class="space-y-3">
+                  <div>
+                     <label for="live_secret_key" class="block text-xs font-medium text-slate-500 mb-1">Live Secret Key <span class="text-rose-500">*</span></label>
+                     <input type="password" name="live_secret_key" id="live_secret_key" required placeholder="sk_live_..."
+                        value="{{ $keys['live_secret_key'] ?? '' }}"
+                        {{ $isConnected ? 'readonly' : '' }}
+                        class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-brand-primary focus:border-brand-primary block p-2.5 transition-colors disabled:opacity-70 read-only:bg-slate-100 read-only:cursor-not-allowed">
+                  </div>
+                  <div>
+                     <label for="live_publishable_key" class="block text-xs font-medium text-slate-500 mb-1">Live Publishable Key <span class="text-rose-500">*</span></label>
+                     <input type="text" name="live_publishable_key" id="live_publishable_key" required placeholder="pk_live_..."
+                        value="{{ $keys['live_publishable_key'] ?? '' }}"
+                        {{ $isConnected ? 'readonly' : '' }}
+                        class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-brand-primary focus:border-brand-primary block p-2.5 transition-colors disabled:opacity-70 read-only:bg-slate-100 read-only:cursor-not-allowed">
+                  </div>
+               </div>
+            </div>
+
+            <!-- Test Mode Column -->
+            <div class="flex-1 space-y-4">
+               <h3 class="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-amber-500"></span> Test Mode Keys
+               </h3>
+               <div class="space-y-3">
+                  <div>
+                     <label for="test_secret_key" class="block text-xs font-medium text-slate-500 mb-1">Test Secret Key <span class="text-rose-500">*</span></label>
+                     <input type="password" name="test_secret_key" id="test_secret_key" required placeholder="sk_test_..."
+                        value="{{ $keys['test_secret_key'] ?? '' }}"
+                        {{ $isConnected ? 'readonly' : '' }}
+                        class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-brand-primary focus:border-brand-primary block p-2.5 transition-colors disabled:opacity-70 read-only:bg-slate-100 read-only:cursor-not-allowed">
+                  </div>
+                  <div>
+                     <label for="test_publishable_key" class="block text-xs font-medium text-slate-500 mb-1">Test Publishable Key <span class="text-rose-500">*</span></label>
+                     <input type="text" name="test_publishable_key" id="test_publishable_key" required placeholder="pk_test_..."
+                        value="{{ $keys['test_publishable_key'] ?? '' }}"
+                        {{ $isConnected ? 'readonly' : '' }}
+                        class="w-full bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:ring-brand-primary focus:border-brand-primary block p-2.5 transition-colors disabled:opacity-70 read-only:bg-slate-100 read-only:cursor-not-allowed">
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         <div class="space-y-3">
+            @if($isConnected)
+               <button type="button" id="editButton" onclick="enableEditing()"
+                  class="w-full bg-white hover:bg-slate-50 text-slate-700 font-medium py-3 px-6 rounded-xl transition-all duration-200 border border-slate-200 flex justify-center items-center gap-2 hover:shadow-sm active:translate-y-0.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                     <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Edit Keys
+               </button>
+            @endif
+
+            <button type="submit" id="saveButton"
+               class="{{ $isConnected ? 'hidden' : '' }} group w-full bg-white hover:bg-slate-50 text-slate-700 font-medium py-3 px-6 rounded-xl transition-all duration-200 border border-slate-200 flex justify-center items-center gap-2 hover:shadow-sm active:translate-y-0.5">
                <svg xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5 text-emerald-400 group-hover:scale-110 transition-transform" viewBox="0 0 20 20"
+                  class="h-5 w-5 text-slate-500 group-hover:scale-110 transition-transform" viewBox="0 0 20 20"
                   fill="currentColor">
                   <path fill-rule="evenodd"
                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                      clip-rule="evenodd" />
                </svg>
-               Connect to GoHighLevel
+               {{ $isConnected ? 'Update & Save Keys' : 'Connect & Save Keys' }}
             </button>
-         </form>
-      @endif
+         </div>
+      </form>
 
-      {{-- Remove Provider Form --}}
       @if($isConnected)
-         <form id="removeIntegrationForm" action="{{ route('provider.delete') }}" method="POST">
-            @csrf
-            @method('DELETE')
-            <input type="hidden" name="location_id" value="{{ $locationId }}">
-            <button type="button" onclick="confirmRemoval()"
-               class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3.5 px-6 rounded-xl transition-all duration-200 shadow-md shadow-red-600/20 flex justify-center items-center gap-2 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm">
-               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-               </svg>
-               Remove Integration
-            </button>
-         </form>
+         <div class="mt-3">
+            <form id="removeIntegrationForm" action="{{ route('provider.delete') }}" method="POST">
+               @csrf
+               @method('DELETE')
+               <input type="hidden" name="location_id" value="{{ $locationId }}">
+               <button type="button" id="removeBtn" onclick="confirmRemoval()"
+                  class="w-full bg-white hover:bg-rose-50 text-rose-600 font-medium py-3 px-6 rounded-xl transition-all duration-200 border border-rose-100 flex justify-center items-center gap-2 hover:shadow-sm active:bg-rose-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-rose-500" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor" stroke-width="2">
+                     <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Remove Integration
+               </button>
+               <button type="button" id="cancelBtn" onclick="cancelEditing()"
+                  class="hidden w-full bg-white hover:bg-rose-50 text-rose-600 font-medium py-3 px-6 rounded-xl transition-all duration-200 border border-rose-100 flex justify-center items-center gap-2 hover:shadow-sm active:bg-rose-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  Cancel Update
+               </button>
+            </form>
+         </div>
       @endif
 
-      <div class="mt-8 pt-6 border-t border-slate-100">
+      <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
          <div
-            class="inline-flex items-center gap-2 text-xs text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
-            <span>Location:</span>
-            <code class="font-mono font-medium text-slate-600">{{ $locationId }}</code>
+            class="inline-flex items-center gap-2 text-xs text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100 italic">
+            <span>Subaccount:</span>
+            <span class="font-medium text-slate-600">{{ $locationName }}</span>
+         </div>
+         <div
+            class="inline-flex items-center gap-2 text-[10px] uppercase font-bold tracking-widest leading-none">
+            @if($isConnected)
+               <span class="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                  <span class="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Connected
+               </span>
+            @else
+               <span class="flex items-center gap-1.5 text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-100">
+                  <span class="w-1 h-1 rounded-full bg-rose-500"></span>
+                  Disconnected
+               </span>
+            @endif
          </div>
       </div>
    </div>
 
    <script>
+      function enableEditing() {
+         const form = document.getElementById('configForm');
+         const inputs = form.querySelectorAll('input:not([type="hidden"])');
+         const editBtn = document.getElementById('editButton');
+         const saveBtn = document.getElementById('saveButton');
+         const removeBtn = document.getElementById('removeBtn');
+         const cancelBtn = document.getElementById('cancelBtn');
+
+         inputs.forEach(input => {
+            input.removeAttribute('readonly');
+            input.classList.remove('read-only:bg-slate-100', 'read-only:cursor-not-allowed');
+            // Force focus on the first input
+         });
+         
+         if (inputs.length > 0) inputs[0].focus();
+
+         if (editBtn) editBtn.classList.add('hidden');
+         saveBtn.classList.remove('hidden');
+
+         if (removeBtn) removeBtn.classList.add('hidden');
+         if (cancelBtn) cancelBtn.classList.remove('hidden');
+      }
+
+      function cancelEditing() {
+         window.location.reload();
+      }
+
       function confirmRemoval() {
          Swal.fire({
             title: 'Are you sure?',

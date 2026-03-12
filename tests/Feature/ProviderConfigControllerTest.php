@@ -24,13 +24,6 @@ class ProviderConfigControllerTest extends TestCase
             'user_type' => 'Location',
         ]);
 
-        // 2. Mock environment variables for PayMongo keys so validation passes
-        config(['services.paymongo.live_secret_key' => 'sk_live_dummy']);
-        config(['services.paymongo.live_publishable_key' => 'pk_live_dummy']);
-        config(['services.paymongo.test_secret_key' => 'sk_test_dummy']);
-        config(['services.paymongo.test_publishable_key' => 'pk_test_dummy']);
-        config(['services.paymongo.is_production' => true]);
-
         // 3. Mock PayMongoService to return true for key validation
         $payMongoMock = \Mockery::mock(\App\Services\PayMongoService::class)->makePartial();
         $payMongoMock->shouldReceive('validateKey')->andReturn(true);
@@ -45,13 +38,17 @@ class ProviderConfigControllerTest extends TestCase
             ], 400),
         ]);
 
-        // 5. Submit the connection request
+        // 5. Submit the connection request with keys
         $response = $this->post(route('provider.connect'), [
             'location_id' => $locationId,
+            'live_secret_key' => 'sk_live_dummy',
+            'live_publishable_key' => 'pk_live_dummy',
+            'test_secret_key' => 'sk_test_dummy',
+            'test_publishable_key' => 'pk_test_dummy',
         ]);
 
         // 6. Assert that we are redirected back with the extracted error message in the session
-        $response->assertSessionHas('error', 'Failed to register the Custom Provider in GHL. Reason: paymentsUrl is invalid.');
+        $response->assertSessionHas('error', 'HighLevel Provider Registration Failed. Reason: paymentsUrl is invalid.');
         $response->assertSessionHas('error_details');
     }
 
@@ -66,13 +63,6 @@ class ProviderConfigControllerTest extends TestCase
             'expires_at' => now()->addDays(1),
             'user_type' => 'Location',
         ]);
-
-        // 2. Mock environment variables for PayMongo keys so validation passes
-        config(['services.paymongo.live_secret_key' => 'sk_live_dummy']);
-        config(['services.paymongo.live_publishable_key' => 'pk_live_dummy']);
-        config(['services.paymongo.test_secret_key' => 'sk_test_dummy']);
-        config(['services.paymongo.test_publishable_key' => 'pk_test_dummy']);
-        config(['services.paymongo.is_production' => true]);
 
         // 3. Mock PayMongoService to return true for key validation
         $payMongoMock = \Mockery::mock(\App\Services\PayMongoService::class)->makePartial();
@@ -92,13 +82,17 @@ class ProviderConfigControllerTest extends TestCase
             ], 401),
         ]);
 
-        // 5. Submit the connection request
+        // 5. Submit the connection request with keys
         $response = $this->post(route('provider.connect'), [
             'location_id' => $locationId,
+            'live_secret_key' => 'sk_live_dummy',
+            'live_publishable_key' => 'pk_live_dummy',
+            'test_secret_key' => 'sk_test_dummy',
+            'test_publishable_key' => 'pk_test_dummy',
         ]);
 
         // 6. Assert that we are redirected back with the extracted error message in the session
-        $response->assertSessionHas('error', 'Failed to push the PayMongo keys to the Connect Config API in GHL. Reason: Unauthorized token or expired access.');
+        $response->assertSessionHas('error', 'Failed to push keys to connect config. Reason: Unauthorized token or expired access.');
         $response->assertSessionHas('error_details');
     }
 }

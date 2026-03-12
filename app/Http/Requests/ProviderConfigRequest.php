@@ -44,6 +44,10 @@ class ProviderConfigRequest extends FormRequest
         return [
             'location_id' => 'required_without:locationId|string|regex:/^[a-zA-Z0-9_-]+$/',
             'locationId' => 'required_without:location_id|string|regex:/^[a-zA-Z0-9_-]+$/',
+            'live_secret_key' => 'nullable|string|starts_with:sk_live_',
+            'live_publishable_key' => 'nullable|string|starts_with:pk_live_',
+            'test_secret_key' => 'nullable|string|starts_with:sk_test_',
+            'test_publishable_key' => 'nullable|string|starts_with:pk_test_',
         ];
     }
 }

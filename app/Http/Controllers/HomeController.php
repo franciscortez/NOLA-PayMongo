@@ -60,16 +60,13 @@ class HomeController extends Controller
          $cacheStatus = 'failed';
       }
 
-      // 3. Check important Env variables
-      $envStatus = config('services.paymongo.live_secret_key') ? 'configured' : 'missing';
-
-      $isHealthy = $dbStatus === 'connected' && $cacheStatus === 'ok' && $envStatus === 'configured';
+      // We don't check for PayMongo keys globally here anymore, as they are dynamic per location.
+      $isHealthy = $dbStatus === 'connected' && $cacheStatus === 'ok';
 
       return response()->json([
          'status' => $isHealthy ? 'OK' : 'ERROR',
          'database' => $dbStatus,
          'cache' => $cacheStatus,
-         'paymongo_keys_present' => $envStatus,
          'timestamp' => now()->toIso8601String(),
       ], $isHealthy ? 200 : 503);
    }

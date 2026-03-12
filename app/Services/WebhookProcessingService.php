@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Transaction;
+use App\Models\LocationToken;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
@@ -15,7 +16,36 @@ class WebhookProcessingService
       $this->ghlWebhookService = $ghlWebhookService;
    }
 
-   public function processCheckoutSessionPaid(array $eventData): bool
+   /**
+    * Resolve a PayMongoService instance using per-location keys if available.
+    * Falls back to global .env keys.
+    */
+   protected function resolvePayMongoService(?string $locationId): PayMongoService
+   {
+      $service = app(PayMongoService::class);
+
+      if (!$locationId) {
+         return $service;
+      }
+
+      $token = LocationToken::where('location_id', $locationId)->first();
+
+      if (!$token) {
+         return $service;
+      }
+
+      // Prefer live keys, fall back to test keys
+      $secretKey = $token->paymongo_live_secret_key ?? $token->paymongo_test_secret_key;
+      $publishableKey = $token->paymongo_live_publishable_key ?? $token->paymongo_test_publishable_key;
+
+      if ($secretKey) {
+         return $service->setDynamicKeys($secretKey, $publishableKey);
+      }
+
+      return $service;
+   }
+
+   public function processCheckoutSessionPaid(array $eventData, ?string $locationId = null): bool
    {
       $checkoutSessionId = $eventData['id'] ?? null;
       $attributes = $eventData['attributes'] ?? [];
@@ -23,7 +53,7 @@ class WebhookProcessingService
 
       // PayMongo checkout webhooks often only send the ID without nested attributes
       if (empty($payments) && $checkoutSessionId) {
-         $service = app(PayMongoService::class);
+         $service = $this->resolvePayMongoService($locationId);
          $result = $service->retrieveCheckoutSession($checkoutSessionId);
          if ($result['success']) {
             $paymentIntent = $result['payment_intent'] ?? null;
@@ -140,7 +170,6 @@ class WebhookProcessingService
       $transaction = Transaction::where('payment_id', $paymentId)->first();
 
       if ($transaction) {
-         // The webhook sends the refund amount or refunds array in the attributes
          $refunds = $attributes['refunds']['data'] ?? [];
          $totalRefundedInWebhook = 0;
 
@@ -148,16 +177,8 @@ class WebhookProcessingService
             $totalRefundedInWebhook += $refund['attributes']['amount'] ?? 0;
          }
 
-         // Fallback if 'refunds' array isn't populated but the event still fired
-         if ($totalRefundedInWebhook === 0 && isset($attributes['amount'])) {
-            // In some basic 'payment.refunded' payloads, the event itself might just represent the refund event
-            // But to be safe, we rely on the `refunds` data array sent by PayMongo.
-         }
-
-         // Update our total
          $currentRefundedTotal = $transaction->amount_refunded;
 
-         // Only add refunds we don't already know about (Basic deduplication)
          $metadata = $transaction->metadata ?? [];
          $existingRefundIds = array_column($metadata['refunds'] ?? [], 'id');
 
@@ -196,5 +217,3 @@ class WebhookProcessingService
       return true;
    }
 }
-
-

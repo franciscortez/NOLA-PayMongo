@@ -18,15 +18,16 @@ class PayMongoWebhookController extends Controller
 
    /**
     * Handle incoming PayMongo webhook events.
-    * POST /api/webhook/paymongo
+    * POST /api/webhook/paymongo/{locationId?}
     */
-   public function handle(PayMongoWebhookRequest $request)
+   public function handle(PayMongoWebhookRequest $request, ?string $locationId = null)
    {
       $payload = $request->validated();
 
       Log::info('PayMongo webhook received', [
          'event_type' => $payload['data']['attributes']['type'] ?? 'unknown',
          'event_id' => $payload['data']['id'] ?? null,
+         'location_id' => $locationId,
       ]);
 
       $eventType = $payload['data']['attributes']['type'] ?? null;
@@ -54,7 +55,7 @@ class PayMongoWebhookController extends Controller
 
       try {
          $handled = match ($eventType) {
-            'checkout_session.payment.paid' => $this->webhookProcessingService->processCheckoutSessionPaid($eventData),
+            'checkout_session.payment.paid' => $this->webhookProcessingService->processCheckoutSessionPaid($eventData, $locationId),
             'payment.paid' => $this->webhookProcessingService->processPaymentPaid($eventData),
             'payment.failed' => $this->webhookProcessingService->processPaymentFailed($eventData),
             'payment.refunded' => $this->webhookProcessingService->processPaymentRefunded($eventData),
@@ -74,9 +75,9 @@ class PayMongoWebhookController extends Controller
          Log::error('PayMongo webhook processing failed', [
             'event_id' => $eventId,
             'event_type' => $eventType,
+            'location_id' => $locationId,
             'error' => $e->getMessage(),
          ]);
-         Log::error("PayMongo Webhook Error: " . $e->getMessage(), ['exception' => $e]);
          return response()->json(['message' => 'Error processing webhook'], 500);
       }
 

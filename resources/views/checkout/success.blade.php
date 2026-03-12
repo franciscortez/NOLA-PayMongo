@@ -19,6 +19,14 @@
       tailwind.config = {
          theme: {
             extend: {
+               colors: {
+                  brand: {
+                     primary: '#2563eb', // blue-600
+                     secondary: '#1e3a8a', // blue-900
+                     accent: '#ffffff',
+                     surface: '#f8fafc', // slate-50
+                  }
+               },
                fontFamily: {
                   sans: ['Inter', 'sans-serif'],
                },
@@ -43,16 +51,29 @@
 </head>
 
 <body
-   class="bg-gradient-to-br from-green-50 to-emerald-100 min-h-screen font-sans text-slate-800 flex items-center justify-center p-6 antialiased">
+   class="bg-gradient-to-br from-blue-50 to-brand-surface min-h-screen font-sans text-slate-800 flex items-center justify-center p-6 antialiased">
 
    <div class="max-w-md w-full animate-slide-up-fade">
       <div
-         class="bg-white/80 backdrop-blur-md shadow-2xl shadow-emerald-900/10 rounded-3xl p-8 text-center border border-emerald-100/50">
+         class="bg-white p-8 rounded-[2.5rem] shadow-2xl shadow-blue-900/10 text-center border border-slate-100 relative overflow-hidden">
+         
+         <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-primary to-brand-secondary"></div>
+
+         <!-- Logo Frame Placeholder -->
+         <div class="mb-8 relative scale-75">
+            <div class="w-24 h-24 bg-brand-surface border-2 border-dashed border-blue-200 rounded-full flex items-center justify-center mx-auto group">
+               <div class="w-20 h-20 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                     <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+               </div>
+            </div>
+         </div>
 
          <div
-            class="w-20 h-20 bg-gradient-to-br from-emerald-100 to-green-200 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner ring-8 ring-emerald-50 animate-bounce-soft">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24"
-               stroke="currentColor" stroke-width="2.5">
+            class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner ring-4 ring-emerald-50 animate-bounce-soft">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+               stroke="currentColor" stroke-width="3">
                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
             </svg>
          </div>

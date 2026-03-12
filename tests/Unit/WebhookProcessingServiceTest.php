@@ -51,7 +51,7 @@ class WebhookProcessingServiceTest extends TestCase
             ]
         ];
 
-        $result = $service->processCheckoutSessionPaid($eventData);
+        $result = $service->processCheckoutSessionPaid($eventData, null);
 
         $this->assertTrue($result);
         $this->assertDatabaseHas('transactions', [
@@ -60,6 +60,43 @@ class WebhookProcessingServiceTest extends TestCase
             'payment_id' => 'pay_123',
             'payment_intent_id' => 'pi_123',
             'payment_method' => 'gcash',
+        ]);
+    }
+
+    public function test_process_checkout_session_paid_passes_location_id_for_key_resolution()
+    {
+        // Transaction linked to a specific GHL location
+        $transaction = Transaction::create([
+            'checkout_session_id' => 'cs_loc_abc',
+            'ghl_location_id' => 'loc_abc_123',
+            'amount' => 8000,
+            'currency' => 'PHP',
+            'status' => 'pending',
+        ]);
+
+        /** @var \App\Services\GhlWebhookService|\Mockery\MockInterface $mockGhlWebhook */
+        $mockGhlWebhook = Mockery::mock(GhlWebhookService::class);
+        $mockGhlWebhook->shouldReceive('sendPaymentCaptured')->once();
+
+        $service = new WebhookProcessingService($mockGhlWebhook);
+
+        $eventData = [
+            'id' => 'cs_loc_abc',
+            'attributes' => [
+                'payment_intent' => ['id' => 'pi_loc_abc'],
+                'payments' => [
+                    ['id' => 'pay_loc_abc', 'attributes' => ['source' => ['type' => 'card']]],
+                ],
+            ]
+        ];
+
+        // Pass the locationId — service should use per-location keys if available
+        $result = $service->processCheckoutSessionPaid($eventData, 'loc_abc_123');
+
+        $this->assertTrue($result);
+        $this->assertDatabaseHas('transactions', [
+            'id' => $transaction->id,
+            'status' => 'paid',
         ]);
     }
 

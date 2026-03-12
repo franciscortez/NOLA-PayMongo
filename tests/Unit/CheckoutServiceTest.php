@@ -171,6 +171,7 @@ class CheckoutServiceTest extends TestCase
 
         /** @var \App\Services\PayMongoService|\Mockery\MockInterface $mockPayMongo */
         $mockPayMongo = Mockery::mock(PayMongoService::class);
+        $mockPayMongo->shouldReceive('setProduction')->once()->andReturnSelf();
         $mockPayMongo->shouldReceive('retrieveCheckoutSession')
             ->once()
             ->with('cs_test_pending')

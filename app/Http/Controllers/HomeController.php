@@ -14,9 +14,8 @@ class HomeController extends Controller
     */
    public function index(Request $request)
    {
-      // Generate a secure CSRF state token for the OAuth flow
-      $state = Str::random(40);
-      $request->session()->put('oauth_state', $state);
+      // Generation of state removed for Marketplace compliance per user request
+
 
       $clientId = config('services.ghl.client_id');
 
@@ -29,10 +28,10 @@ class HomeController extends Controller
       $scopesEncoded = urlencode($scopes);
 
       // Standard GHL
-      $standardUrl = "https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri={$redirectUri}&client_id={$clientId}&scope={$scopesEncoded}&state={$state}&version_id={$versionId}";
+      $standardUrl = "https://marketplace.gohighlevel.com/oauth/chooselocation?response_type=code&redirect_uri={$redirectUri}&client_id={$clientId}&scope={$scopesEncoded}&version_id={$versionId}";
 
       // White Label (LeadConnector)
-      $whiteLabelUrl = "https://marketplace.leadconnectorhq.com/oauth/chooselocation?response_type=code&redirect_uri={$redirectUri}&client_id={$clientId}&scope={$scopesEncoded}&state={$state}&version_id={$versionId}";
+      $whiteLabelUrl = "https://marketplace.leadconnectorhq.com/oauth/chooselocation?response_type=code&redirect_uri={$redirectUri}&client_id={$clientId}&scope={$scopesEncoded}&version_id={$versionId}";
 
       return view('welcome', [
          'standardUrl' => $standardUrl,

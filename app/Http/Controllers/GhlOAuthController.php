@@ -17,19 +17,10 @@ class GhlOAuthController extends Controller
     public function callback(Request $request)
     {
         $code = $request->query('code');
-        $state = $request->query('state');
 
         if (!$code) {
             return view('oauth.error', [
                 'error' => 'No authorization code provided in the callback URL.',
-            ]);
-        }
-
-        // Validate state parameter to prevent CSRF attacks if initiated from our home page
-        $savedState = $request->session()->pull('oauth_state');
-        if ($savedState && $state !== $savedState) {
-            return view('oauth.error', [
-                'error' => 'Invalid state parameter. Authentication failed.',
             ]);
         }
 

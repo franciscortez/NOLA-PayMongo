@@ -238,7 +238,7 @@ class PayMongoService
             'id' => $paymentIntentId,
             'body' => $response->json(),
          ]);
-         return ['success' => false, 'error' => $response->json()];
+         return ['success' => false, 'error' => 'Failed to retrieve payment intent details.'];
       }
 
       $data = $response->json('data');
@@ -266,7 +266,7 @@ class PayMongoService
             'id' => $paymentId,
             'body' => $response->json(),
          ]);
-         return ['success' => false, 'error' => $response->json()];
+         return ['success' => false, 'error' => 'Failed to retrieve payment details.'];
       }
 
       $data = $response->json('data');
@@ -294,7 +294,7 @@ class PayMongoService
             'id' => $checkoutSessionId,
             'body' => $response->json(),
          ]);
-         return ['success' => false, 'error' => $response->json()];
+         return ['success' => false, 'error' => 'Failed to retrieve checkout session details.'];
       }
 
       $data = $response->json('data');
@@ -353,7 +353,7 @@ class PayMongoService
             'payment_id' => $paymentId,
             'body' => $response->json(),
          ]);
-         return ['success' => false, 'error' => $response->json()];
+         return ['success' => false, 'error' => 'Refund process failed. Please contact support.'];
       }
 
       $data = $response->json('data');

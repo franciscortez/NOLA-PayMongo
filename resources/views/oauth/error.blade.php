@@ -37,8 +37,14 @@
                },
                keyframes: {
                   fadeInUp: {
-                     '0%': { opacity: '0', transform: 'translateY(15px)' },
-                     '100%': { opacity: '1', transform: 'translateY(0)' },
+                     '0%': {
+                        opacity: '0',
+                        transform: 'translateY(15px)'
+                     },
+                     '100%': {
+                        opacity: '1',
+                        transform: 'translateY(0)'
+                     },
                   }
                }
             }
@@ -90,23 +96,18 @@
             </svg>
             <span>{{ $error }}</span>
          </div>
-         @if(isset($details))
-            <div class="mt-3 pt-3 border-t border-rose-200">
-               <p class="text-[10px] uppercase tracking-wider font-bold text-rose-400 mb-1">Technical Details</p>
-               <pre
-                  class="bg-rose-100/50 p-2 rounded-lg overflow-x-auto text-[11px] font-mono text-rose-800">{{ is_array($details) ? json_encode($details, JSON_PRETTY_PRINT) : $details }}</pre>
-            </div>
          @endif
       </div>
+   </div>
 
-      <a href="/"
-         class="group w-full bg-brand-secondary hover:bg-brand-primary text-white font-medium py-3.5 px-6 rounded-xl transition-all duration-200 shadow-md shadow-blue-900/20 flex justify-center items-center gap-2 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm">
-         Try Again
-      </a>
+   <a href="/"
+      class="group w-full bg-brand-secondary hover:bg-brand-primary text-white font-medium py-3.5 px-6 rounded-xl transition-all duration-200 shadow-md shadow-blue-900/20 flex justify-center items-center gap-2 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm">
+      Try Again
+   </a>
 
-      <p class="mt-6 text-xs text-slate-400">
-         If this persists, please contact support with the details shown above.
-      </p>
+   <p class="mt-6 text-xs text-slate-400">
+      If this persists, please contact support with the details shown above.
+   </p>
    </div>
 </body>
 

@@ -26,8 +26,7 @@ class GhlService
          Log::error('HighLevel Token Exchange Failed', $response->json());
          return [
             'success' => false,
-            'error' => 'Token Exchange Failed. Check Laravel logs.',
-            'details' => $response->json(),
+            'error' => 'Authentication Failed',
          ];
       }
 

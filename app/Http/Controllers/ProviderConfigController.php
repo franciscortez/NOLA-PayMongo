@@ -104,16 +104,8 @@ class ProviderConfigController extends Controller
         ]);
 
         if (!$result['success']) {
-            $details = $result['details'] ?? [];
-            $apiMessage = is_array($details) ? ($details['message'] ?? $details['error'] ?? '') : '';
-            $errorMessage = $result['error'] ?? 'Setup failed.';
-            if ($apiMessage) {
-                $errorMessage .= ' Reason: ' . $apiMessage;
-            }
-
             return back()->with([
-                'error' => $errorMessage,
-                'error_details' => $result['details'] ?? null
+                'error' => 'Unable to connect your PayMongo account. Please check your API keys and try again.',
             ]);
         }
 
@@ -138,8 +130,7 @@ class ProviderConfigController extends Controller
 
         if (!$result['success']) {
             return back()->with([
-                'error' => 'Failed to remove the provider from GHL: ' . ($result['error'] ?? ''),
-                'error_details' => $result['details'] ?? null
+                'error' => 'Failed to remove the provider from GoHighLevel. Please try again later.',
             ]);
         }
 

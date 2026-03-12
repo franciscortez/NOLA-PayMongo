@@ -29,8 +29,7 @@ class GhlOAuthController extends Controller
 
         if (!$tokenResult['success']) {
             return view('oauth.error', [
-                'error' => $tokenResult['error'],
-                'details' => $tokenResult['details'] ?? null,
+                'error' => 'Authentication failed. Please try again.',
             ]);
         }
 

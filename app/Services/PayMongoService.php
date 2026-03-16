@@ -88,7 +88,14 @@ class PayMongoService
          'checkout_session.payment.paid',
       ];
 
-      Log::info('PayMongo: Creating webhook', [
+      // If the webhook already exists, or if we want to ensure only one exists for this location, 
+      // we proactively find and delete any existing webhooks for this location ID.
+      // PayMongo only provides the webhook secret (whsk_...) upon creation, so we must recreate it 
+      // if the URL or domain has changed.
+      Log::info('PayMongo: Ensuring no duplicate webhooks for location', ['location_id' => $locationId]);
+      $this->deleteWebhooksForLocation($secretKey, $locationId);
+      
+      Log::info('PayMongo: Creating new webhook', [
          'location_id' => $locationId,
          'url' => $webhookUrl,
       ]);
@@ -105,25 +112,6 @@ class PayMongoService
          ]);
 
       if (!$response->successful()) {
-         $errors = $response->json('errors');
-         $firstError = $errors[0] ?? [];
-
-         // If the webhook already exists, we need to delete it and recreate it 
-         // because PayMongo only provides the webhook secret (whsk_...) upon creation.
-          if (!$isRetry && isset($firstError['code']) && $firstError['code'] === 'resource_exists') {
-             Log::info('PayMongo: Webhook already exists. Attempting to delete and recreate...', ['location_id' => $locationId]);
-             
-             $existingWebhooks = $this->listWebhooks($secretKey);
-             foreach ($existingWebhooks as $wh) {
-                if (($wh['attributes']['url'] ?? '') === $webhookUrl) {
-                   $this->disableWebhook($secretKey, $wh['id']);
-                   Log::info('PayMongo: Deleted existing webhook', ['location_id' => $locationId, 'webhook_id' => $wh['id']]);
-                }
-             }
-             
-             // Try creating it again (recursion once)
-             return $this->createWebhook($secretKey, $locationId, true);
-          }
 
          Log::error('PayMongo: Failed to create webhook', [
             'location_id' => $locationId,
@@ -170,6 +158,28 @@ class PayMongoService
          ->delete("{$this->baseUrl}/webhooks/{$webhookId}");
 
       return $response->successful();
+   }
+
+   /**
+    * Delete all webhooks associated with a specific location ID.
+    * This matches webhooks where the URL ends with "/{$locationId}".
+    */
+   public function deleteWebhooksForLocation(string $secretKey, string $locationId): void
+   {
+      $webhooks = $this->listWebhooks($secretKey);
+      $suffix = "/{$locationId}";
+
+      foreach ($webhooks as $wh) {
+         $url = $wh['attributes']['url'] ?? '';
+         if (str_ends_with($url, $suffix)) {
+            Log::info('PayMongo: Deleting existing webhook for location', [
+               'location_id' => $locationId,
+               'webhook_id' => $wh['id'],
+               'url' => $url,
+            ]);
+            $this->disableWebhook($secretKey, $wh['id']);
+         }
+      }
    }
 
    /**

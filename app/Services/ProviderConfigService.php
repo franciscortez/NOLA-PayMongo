@@ -187,7 +187,17 @@ class ProviderConfigService
     */
    public function disconnectPayMongoIntegration(LocationToken $token): array
    {
-      $result = $this->deleteProvider($token->location_id, $token->access_token);
+      $locationId = $token->location_id;
+      
+      // Cleanup webhooks from PayMongo before deleting local tokens
+      if ($token->paymongo_live_secret_key) {
+         $this->payMongoService->deleteWebhooksForLocation($token->paymongo_live_secret_key, $locationId);
+      }
+      if ($token->paymongo_test_secret_key) {
+         $this->payMongoService->deleteWebhooksForLocation($token->paymongo_test_secret_key, $locationId);
+      }
+
+      $result = $this->deleteProvider($locationId, $token->access_token);
 
       if ($result['success']) {
          $token->update([

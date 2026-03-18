@@ -53,7 +53,7 @@
 </head>
 
 <body
-    class="bg-slate-50 min-h-screen font-sans text-slate-800 antialiased relative overflow-hidden flex flex-col items-center justify-center p-6">
+    class="bg-slate-50 min-h-screen font-sans text-slate-800 antialiased relative overflow-x-hidden flex flex-col items-center justify-center p-4 md:p-6">
 
     <!-- Background Decor (Blue Theme) -->
     <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100/30 rounded-full mix-blend-multiply filter blur-[80px] animate-pulse"
@@ -81,7 +81,7 @@
             </div>
         </div>
 
-        <h1 class="text-5xl font-display font-extrabold text-slate-900 tracking-tight mb-4">
+        <h1 class="text-3xl md:text-5xl font-display font-extrabold text-slate-900 tracking-tight mb-4">
             NOLA PayMongo
         </h1>
         <p class="text-lg text-slate-500 mb-12 max-w-lg mx-auto leading-relaxed">

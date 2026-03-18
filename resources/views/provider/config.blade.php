@@ -57,7 +57,7 @@
 </head>
 
 <body
-   class="bg-slate-50 flex items-center justify-center min-h-screen font-sans text-slate-800 antialiased p-6 relative overflow-hidden">
+   class="bg-slate-50 flex items-center justify-center min-h-screen font-sans text-slate-800 antialiased p-4 md:p-6 relative overflow-x-hidden">
 
    <!-- Beautiful Background Orbs (Blue/Navy Theme) -->
    <div
@@ -70,7 +70,7 @@
       class="absolute -bottom-8 left-1/3 w-96 h-96 bg-blue-100/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000">
    </div> <!-- Main Card -->
    <div
-      class="bg-white p-10 rounded-[2rem] shadow-2xl ring-1 ring-slate-200 max-w-4xl w-full text-center relative z-10 animate-fade-in-up border-t-8 border-brand-primary">
+      class="bg-white p-6 md:p-10 rounded-[2rem] shadow-2xl ring-1 ring-slate-200 max-w-4xl w-full text-center relative z-10 animate-fade-in-up border-t-8 border-brand-primary">
 
       <div class="mb-10">
          <!-- Logo Frame Placeholder -->
@@ -87,7 +87,7 @@
                <span class="absolute -bottom-2 right-0 bg-white border border-slate-100 text-[10px] px-2 py-0.5 rounded-full shadow-sm font-bold text-brand-secondary">LOGO</span>
             </div>
          </div>
-         <h1 class="text-3xl font-display font-bold text-slate-900 tracking-tight">NOLA PayMongo</h1>
+         <h1 class="text-2xl md:text-3xl font-display font-bold text-slate-900 tracking-tight">NOLA PayMongo</h1>
          <p class="text-sm text-slate-500 mt-2 leading-relaxed">Securely manage your GoHighLevel Custom Payment Provider
             integration.</p>
       </div>
